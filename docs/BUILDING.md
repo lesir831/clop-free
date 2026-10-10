@@ -226,12 +226,14 @@ strict nested signatures, both `arm64` and `x86_64` in the app executable,
 Applications link, preserved license/notice files and byte-for-byte equality of
 the whole mounted app. No global security settings are changed.
 
-The uploaded candidate artifact includes the DMG, exact tracked source snapshot,
+The uploaded candidate artifact includes the DMG, tagged source snapshot,
 build manifest, instructions and `SHA256SUMS`. The manifest records source and
 workflow commits and CI run. Re-running is supported, but byte-for-byte build
-reproducibility is not claimed. The tracked source snapshot includes LFS pointers
-and the inherited `lrzip` binary; it is not complete corresponding source for all
-dependencies. Source-tag notices remain verbatim, including their earlier
+reproducibility is not claimed. In the verified native run, Git archive hydrated the pinned optimizer LFS
+resource; the source snapshot includes that archive and the inherited `lrzip`
+binary. Its other 279 tracked files match the tagged Git blobs, and the hydrated
+archive matches the tag's SHA-256 pin. This is not complete corresponding source
+for all dependencies. Source-tag notices remain verbatim, including their earlier
 withholding statement, while the package readme records this separately requested
 build and unresolved rights/provenance.
 
