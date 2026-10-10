@@ -198,7 +198,7 @@ class ArchiveTests(unittest.TestCase):
                     link = destination / name
                     self.assertTrue(link.is_symlink())
                     self.assertEqual(os.readlink(link), target)
-                    self.assertEqual(link.resolve(), destination / "lib")
+                    self.assertEqual(link.resolve(), (destination / "lib").resolve())
                     self.assertEqual((link / "helper").read_bytes(), b"data")
 
     def test_path_and_link_traversal_rejected_before_extraction(self):
