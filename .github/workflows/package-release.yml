@@ -1,0 +1,72 @@
+name: Package v3.5.0 DMG
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/package-release.yml
+      - Scripts/package-dmg.sh
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-v3.5.0
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: v3.5.0
+  SOURCE_COMMIT: 405a131ec3f35c718622a57c189f61f1b99426fe
+
+jobs:
+  package:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - name: Check out packaging tools
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: packaging
+          persist-credentials: false
+      - name: Check out immutable release source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+      - name: Verify exact release commit and packaging syntax
+        run: |
+          set -euo pipefail
+          test "$(git -C source rev-parse HEAD)" = "$SOURCE_COMMIT"
+          bash -n packaging/Scripts/package-dmg.sh
+          make -C packaging check
+          xcodebuild -version
+      - name: Run source regression and feature-policy checks
+        working-directory: source
+        run: |
+          make check
+          python3 Scripts/test_feature_policy.py
+      - name: Fetch and verify pinned optimizer assets
+        working-directory: source
+        run: |
+          make assets
+          python3 Scripts/check_optimizer_archive.py
+      - name: Build universal app from unchanged release source
+        working-directory: source
+        run: make build
+      - name: Create and mount-verify DMG with source and notices
+        run: |
+          bash packaging/Scripts/package-dmg.sh \
+            'source/build/Clop Free.app' source "${RELEASE_TAG#v}" "$SOURCE_COMMIT" release-artifacts
+      - name: Upload verified release candidates
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Clop-Free-v3.5.0-universal-release-candidates
+          path: release-artifacts/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

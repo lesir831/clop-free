@@ -191,16 +191,55 @@ readiness, error propagation, MCP opt-in and script consent.
 
 The build workflow runs portable checks, the policy harness, asset verification,
 and a universal ad-hoc build with packaging and signature validation. Run logs
-remain available, but artifact uploads and release publication are withheld
-pending dependency redistribution-license review. Even a plain source archive
-includes the inherited `lrzip` executable, so CI does not upload source archives
-either. Builds use no Developer ID/notarization credentials. Source snapshots
-alone do not satisfy every dependency's corresponding-source obligations; see
-[NOTICE.md](../NOTICE.md) before distributing binaries.
+remain available. Ordinary PR/build jobs upload no artifacts and never publish
+releases. The separate, maintainer-requested DMG packaging path below uploads
+verified candidates for the pinned release only. Builds use no Developer ID or
+notarization credentials. Source snapshots alone do not satisfy every dependency's
+corresponding-source obligations; see [NOTICE.md](../NOTICE.md) before distributing
+binaries.
 
 A maintainer must still smoke-test launch, optimization, batch/Shortcuts/CLI/MCP
 behavior, permissions, and helper extraction on real Macs. Native build, signing,
 notarization and runtime behavior cannot be verified by a Linux-only source check.
+
+## Versioned DMG packaging
+
+`Package v3.5.0 DMG` runs on changes to its packaging controls on `main`, or by
+manual dispatch from `main`. It checks out the **existing** `v3.5.0` tag separately
+from packaging tools, and fails unless the source commit is exactly
+`405a131ec3f35c718622a57c189f61f1b99426fe`. It never moves the tag, changes release
+source, or creates/edits/deletes a GitHub Release. Its token has read-only contents
+permission, and no credentials are persisted in either checkout.
+
+After source regression checks, the feature-policy harness, asset verification
+and a universal build, it invokes the separately versioned packaging script:
+
+```sh
+bash Scripts/package-dmg.sh /path/to/Clop\ Free.app /path/to/source-checkout \
+  3.5.0 405a131ec3f35c718622a57c189f61f1b99426fe /path/to/new-output
+```
+
+The compressed UDZO image contains `Clop Free.app`, a link to `/Applications`,
+installation/build caveats, GPL license text, the exact source notice and fork
+changelog. Verification mounts the image read-only, checks app version/identity,
+strict nested signatures, both `arm64` and `x86_64` in the app executable,
+Applications link, preserved license/notice files and byte-for-byte equality of
+the whole mounted app. No global security settings are changed.
+
+The uploaded candidate artifact includes the DMG, exact tracked source snapshot,
+build manifest, instructions and `SHA256SUMS`. The manifest records source and
+workflow commits and CI run. Re-running is supported, but byte-for-byte build
+reproducibility is not claimed. The tracked source snapshot includes LFS pointers
+and the inherited `lrzip` binary; it is not complete corresponding source for all
+dependencies. Source-tag notices remain verbatim, including their earlier
+withholding statement, while the package readme records this separately requested
+build and unresolved rights/provenance.
+
+This is **ad-hoc signed and not notarized**. Gatekeeper may block a downloaded
+app. Successful packaging does not certify third-party redistribution rights,
+complete corresponding source, interactive UI behavior or real-media processing.
+A maintainer still needs to resolve the licensing/provenance issues recorded in
+`NOTICE.md` and do runtime validation before making broader distribution claims.
 
 ## Upstream synchronization
 
