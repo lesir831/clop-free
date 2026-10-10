@@ -1,6 +1,7 @@
 """Source regression checks; run Scripts/test_feature_policy.py on macOS for behavior."""
 from pathlib import Path
 import importlib.util
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,6 +11,42 @@ spec.loader.exec_module(policy)
 
 
 class FeaturePolicyTests(unittest.TestCase):
+    def test_pipeline_builder_and_helpers_are_extracted_from_production(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "ClopCLI").mkdir()
+            for filename, names in [
+                ("MCPToolTable.swift", ["pipelineRunArguments"]),
+                ("MCPTools.swift", ["argument", "opt", "flag"]),
+            ]:
+                text = (ROOT / "ClopCLI" / filename).read_text()
+                for name in names:
+                    # Mark each real function to catch duplicated test-only
+                    # implementations or ignored production changes.
+                    text = text.replace(f"    static func {name}(", f"    static func {name}(/* production {name} */ ", 1)
+                (root / "ClopCLI" / filename).write_text(text)
+            source = policy.pipeline_argument_sources(root)
+            for name in ["pipelineRunArguments", "argument", "opt", "flag"]:
+                self.assertIn(f"/* production {name} */", source)
+        self.assertIn(policy.pipeline_argument_sources(), policy.harness())
+        self.assertNotIn("static func paths(", policy.pipeline_argument_sources())
+
+    def test_missing_pipeline_builder_fails_extraction(self):
+        with self.assertRaisesRegex(ValueError, "pipelineRunArguments"):
+            policy.static_function("extension MCPServer {}", "pipelineRunArguments")
+
+    def test_pipeline_run_preserves_elicitation_and_timeout(self):
+        text = (ROOT / "ClopCLI/MCPToolTable.swift").read_text()
+        method = policy.static_function(text, "pipelineRun")
+        call = "return try run(pipelineRunArguments(a, pipeline: pipeline, files: files), timeout: fileTimeout)"
+        self.assertIn("let files = try paths(a)", method)
+        self.assertIn("if mayContainVideo(files)", method)
+        self.assertIn("switch try settleSpeedFrames(", method)
+        self.assertIn("case let .settled(settled): pipeline = settled", method)
+        self.assertIn("case let .askInChat(output): return output", method)
+        self.assertIn(call, method)
+        self.assertLess(method.index("switch try settleSpeedFrames("), method.index(call))
+
     def test_production_sources_are_extracted(self):
         source = policy.policy_sources()
         self.assertIn("return try await action()", source)

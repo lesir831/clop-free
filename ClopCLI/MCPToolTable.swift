@@ -373,17 +373,22 @@ extension MCPServer {
             case let .askInChat(output): return output
             }
         }
-        return try run(
-            ["pipeline", "run", pipeline] + files
-                + flag(a, "recursive", "--recursive")
-                + flag(a, "skipErrors", "--skip-errors")
-                + flag(a, "hideResult", "--hide-result")
-                + opt(a, "--types", "types")
-                + opt(a, "--optimise-behaviour", "optimiseBehaviour")
-                + opt(a, "--convert-behaviour", "convertBehaviour")
-                + ["--no-progress"],
-            timeout: fileTimeout
-        )
+        return try run(pipelineRunArguments(a, pipeline: pipeline, files: files), timeout: fileTimeout)
+    }
+
+    /// Keep each append independently typed so Swift does not infer one large
+    /// overloaded array-concatenation expression during the release build.
+    static func pipelineRunArguments(_ a: [String: Any], pipeline: String, files: [String]) -> [String] {
+        var argv: [String] = ["pipeline", "run", pipeline]
+        argv += files
+        argv += flag(a, "recursive", "--recursive")
+        argv += flag(a, "skipErrors", "--skip-errors")
+        argv += flag(a, "hideResult", "--hide-result")
+        argv += opt(a, "--types", "types")
+        argv += opt(a, "--optimise-behaviour", "optimiseBehaviour")
+        argv += opt(a, "--convert-behaviour", "convertBehaviour")
+        argv.append("--no-progress")
+        return argv
     }
 
     static func pipelineWrite(_ a: [String: Any]) throws -> ToolOutput {

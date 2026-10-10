@@ -18,6 +18,8 @@ The pinned `alin23/swift-ignore` revision `4fc142964621eda7835a4524e567388f5ef6f
 
 The inherited `lrzip` executable is also tracked directly in this repository, so an ordinary Git source archive includes executable code. Its exact corresponding-source/build provenance and required notices need review before redistribution; CI therefore withholds all artifact uploads rather than describing its archives as binary-free.
 
+JxlCoder 1.9.1's wrapper licence does not by itself cover every bundled binary framework. Its Brotli, Highway, libjxl and other compiled components require their own notices and source/provenance review before an app release.
+
 The upstream Git LFS archive contains separately authored optimisation tools, including ffmpeg, Ghostscript, pngquant, jpegoptim, gifsicle, libvips, gifski and supporting components. Those tools have their own licences. Their archive is inherited, not independently rebuilt or comprehensively audited by this fork. Distributors must verify included notices, licence compatibility and corresponding-source availability for the exact binaries they publish.
 
 No rights in third-party trademarks are granted by this notice. The original project's GPL notice does not replace the individual obligations of dependencies.
