@@ -24,7 +24,7 @@ class DmgPackagingTests(unittest.TestCase):
     def test_dmg_is_verified_and_provenance_is_preserved(self):
         script = (ROOT / 'Scripts/package-dmg.sh').read_text()
         for check in ['-format UDZO', 'hdiutil verify', 'hdiutil attach -readonly',
-                      'codesign --verify --deep --strict', 'lipo -verify_arch arm64 x86_64',
+                      'codesign --verify --deep --strict', 'lipo "$target/Contents/MacOS/Clop" -verify_arch arm64 x86_64',
                       'diff -qr', 'cmp "$SOURCE/LICENSE"', 'cmp "$SOURCE/NOTICE.md"',
                       'shasum -a 256 -c SHA256SUMS', 'notarized\': False',
                       'Unresolved Lowtech/swift-ignore redistribution grants']:

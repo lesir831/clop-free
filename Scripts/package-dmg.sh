@@ -42,7 +42,7 @@ assert info['CFBundleExecutable'] == 'Clop', 'Unexpected executable'
 assert (app / 'Contents/MacOS/Clop').is_file(), 'Missing application executable'
 PY
     codesign --verify --deep --strict --verbose=2 "$target"
-    lipo -verify_arch arm64 x86_64 "$target/Contents/MacOS/Clop"
+    lipo "$target/Contents/MacOS/Clop" -verify_arch arm64 x86_64
     lipo -archs "$target/Contents/MacOS/Clop"
 }
 verify_app "$APP"
