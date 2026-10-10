@@ -1,0 +1,135 @@
+name: Review upstream changes
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: >-
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      (github.event_name == 'workflow_dispatch' || vars.ENABLE_UPSTREAM_SYNC == 'true')
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.merge.outputs.changed }}
+      branch: ${{ steps.merge.outputs.branch }}
+      base: ${{ steps.merge.outputs.base }}
+      upstream: ${{ steps.merge.outputs.upstream }}
+      candidate: ${{ steps.merge.outputs.candidate }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare merge using trusted baseline checks
+        id: merge
+        run: bash Scripts/sync-upstream.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: steps.merge.outputs.changed == 'true'
+        with:
+          name: upstream-candidate
+          path: |
+            build/upstream-sync/candidate.bundle
+            build/upstream-sync/candidate.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve conflict or manual-review report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: upstream-sync-blocker
+          path: build/upstream-sync/*.txt
+          if-no-files-found: ignore
+
+  validate:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.base }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: upstream-candidate
+          path: ${{ runner.temp }}/upstream-candidate
+      - name: Check out exact prepared candidate without credentials
+        env:
+          CANDIDATE: ${{ needs.prepare.outputs.candidate }}
+          BRANCH: ${{ needs.prepare.outputs.branch }}
+          GIT_LFS_SKIP_SMUDGE: '1'
+        run: |
+          set -euo pipefail
+          git -c core.hooksPath=/dev/null fetch "$RUNNER_TEMP/upstream-candidate/candidate.bundle" "refs/heads/$BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE"
+          git -c core.hooksPath=/dev/null checkout --detach "$CANDIDATE"
+      - run: make check
+      - run: python3 Scripts/test_feature_policy.py
+      - run: make assets
+      - run: make build
+
+  # No merged code runs in this job. Its write token is used only by inline Git
+  # and gh commands after the read-only validation job has succeeded.
+  propose:
+    needs: [prepare, validate]
+    if: needs.prepare.outputs.changed == 'true' && needs.validate.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.base }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: upstream-candidate
+          path: ${{ runner.temp }}/upstream-candidate
+      - name: Publish validated branch and open a draft PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+          BASE: ${{ needs.prepare.outputs.base }}
+          UPSTREAM: ${{ needs.prepare.outputs.upstream }}
+          CANDIDATE: ${{ needs.prepare.outputs.candidate }}
+          BRANCH: ${{ needs.prepare.outputs.branch }}
+        run: |
+          set -euo pipefail
+          [[ "$BASE" =~ ^[0-9a-f]{40}$ && "$UPSTREAM" =~ ^[0-9a-f]{40}$ && "$CANDIDATE" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$BRANCH" =~ ^sync/upstream-[0-9a-f]{12}-[0-9a-f]{12}$ ]]
+          git -c core.hooksPath=/dev/null fetch "$RUNNER_TEMP/upstream-candidate/candidate.bundle" "refs/heads/$BRANCH"
+          test "$(git rev-parse FETCH_HEAD)" = "$CANDIDATE"
+          test "$(git rev-parse "$CANDIDATE^1")" = "$BASE"
+          test "$(git rev-parse "$CANDIDATE^2")" = "$UPSTREAM"
+          AUTH="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          echo "::add-mask::$AUTH"
+          git_auth() { git -c core.hooksPath=/dev/null -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $AUTH" "$@"; }
+          test "$(git_auth ls-remote origin "refs/heads/$BASE_BRANCH" | cut -f1)" = "$BASE" || {
+            echo 'Default branch moved during validation. Run sync again against the new base.' >&2; exit 1;
+          }
+          # No force push, no change to the default branch, and no automatic merge.
+          git_auth push origin "$CANDIDATE:refs/heads/$BRANCH"
+          EXISTING="$(gh pr list --base "$BASE_BRANCH" --head "$BRANCH" --state open --json url --jq '.[0].url // empty')"
+          if [[ -n "$EXISTING" ]]; then
+            printf 'Existing review: %s\n' "$EXISTING"
+          else
+            gh pr create --draft --base "$BASE_BRANCH" --head "$BRANCH" \
+              --title "Review upstream Clop ${UPSTREAM:0:12}" \
+              --body "Merge candidate from FuzzyIdeas/Clop at $UPSTREAM onto $BASE. Fork invariants, feature-policy tests and the macOS ad-hoc build passed in this workflow. Review all changes for new restrictions, identity coupling, external services and licensing obligations before merging. This workflow never auto-merges."
+          fi

@@ -92,7 +92,7 @@ class FileOptimisationWatcher {
     /// Bumped on every `startWatching()` so the off-main existence check of a superseded call can be
     /// discarded when it finally returns, instead of starting a watcher on paths that moved on.
     var watchGeneration = 0
-    let existenceCheckQueue = DispatchQueue(label: "com.lowtechguys.Clop.watcher-existence", qos: .utility)
+    let existenceCheckQueue = DispatchQueue(label: "com.clop-free.Clop.watcher-existence", qos: .utility)
 
     var pathsKey: Defaults.Key<[String]>
     var enabledKey: Defaults.Key<Bool>
@@ -391,7 +391,7 @@ class FileOptimisationWatcher {
         }
 
         DebugDump.record("[fsevent] >>> optimising \(path.string) (\(fileType.description) watcher)")
-        try? await proGuard(count: optimisedCount, url: path.url) {
+        try? await performOptimisation {
             self.handler(path)
         }
         alreadyOptimisedFileRemovers[oldPath.string]?.cancel()
@@ -408,8 +408,6 @@ class FileOptimisationWatcher {
             }
         }
     }
-
-    private let optimisedCount = OptimisationCounter()
 
     private func startWatching(existingPaths: [String]) {
         guard !existingPaths.isEmpty else { return }

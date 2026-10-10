@@ -1,107 +1,62 @@
-<p align="center">
-    <a href="https://lowtechguys.com/clop"><img width="128" height="128" src="Clop/Assets.xcassets/clop.imageset/clop_256.png" style="filter: drop-shadow(0px 2px 4px rgba(80, 50, 6, 0.2));"></a>
-    <h1 align="center"><code style="text-shadow: 0px 3px 10px rgba(8, 0, 6, 0.35); font-size: 3rem; font-family: ui-monospace, Menlo, monospace; font-weight: 800; background: transparent; color: #4d3e56; padding: 0.2rem 0.2rem; border-radius: 6px">Clop</code></h1>
-    <h4 align="center" style="padding: 0; margin: 0; font-family: ui-monospace, monospace;">Image, video, PDF and clipboard optimiser</h4>
-    <h6 align="center" style="padding: 0; margin: 0; font-family: ui-monospace, monospace; font-weight: 400;">Copy large, paste small, send fast</h6>
-</p>
+# clop-free
 
-<p align="center">
-    <a href="https://files.lowtechguys.com/releases/Clop.dmg">
-        <img width=200 src="https://files.lowtechguys.com/macos-app.svg">
-    </a>
-</p>
+An independent fork of [Clop](https://github.com/FuzzyIdeas/Clop), the macOS image, video, audio, PDF and clipboard optimiser. Distributed under the [GNU GPL v3](LICENSE).
 
-## Optimise images as soon as you copy them
+The public optimisation implementations are available without purchase, activation, a trial period or a five-file session limit. This project is not affiliated with or endorsed by the upstream authors.
 
-As long as the Clop app is running, every time you copy an image to your **clipboard**, Clop will **optimise** it to the **smallest possible size**.
+## Features
 
-The optimised image will have minimal to zero loss in quality, and will be **ready to paste** in any app.
+- Clipboard and watched-folder optimisation
+- Image/video resizing, conversion and compression
+- PDF and audio processing
+- Batch optimisation and processing pipelines
+- macOS Shortcuts, Finder integration and command-line tools
+- MCP automation, with the user's opt-in and separate permission for agent-authored inline scripts
 
-## Screen recordings as small as screenshots
+## Build
 
-Sending screen recordings becomes 10x faster with Clop. The app will optimise the video as soon as you stop recording.
+Requires macOS, Xcode 26.3 or newer, Python 3 and Git LFS. No upstream signing identity or private `required.swift` file is needed.
 
-The video will be available as a **floating thumbnail**, ready for you to **drag and drop** in any app.
+```sh
+git clone https://github.com/lesir831/clop-free.git
+cd clop-free
+make assets
+make build
+```
 
-Clop can use Apple Silicon's dedicated **Media Engine chip** for battery-efficient video encoding without using the CPU.
+The default build uses **ad-hoc signing**. That is a local integrity signature, not an Apple Developer ID signature or notarization. macOS Gatekeeper may block a downloaded ad-hoc build. The project does not disable Gatekeeper or alter system security settings.
 
-## Downscale in a pinch
+If you have a source ZIP, extract it and run `make assets`, `make check`, and `make build` in its `clop-free` folder. Asset recovery works without Git history; upstream synchronization requires a full clone.
 
-Get images and videos ready for sharing by scaling them down to any resolution.
+See [build and signing instructions](docs/BUILDING.md) for requirements, output paths, validation, your own Developer ID certificate, optional notarization and upstream synchronization.
 
-Use handy hotkeys or the floating buttons to downscale the image or video and get an even smaller file size.
+The distributable is named **Clop Free.app**. Its bundle IDs, preferences, IPC names, URL scheme and MCP registration are separate from the upstream app. The optional command-line installer uses `~/.local/bin/clop-free`.
 
-* <kbd>-</kbd> downscales incrementally from 90% until 10% of the original resolution
-* <kbd>1</kbd>..<kbd>9</kbd> are for downscaling to specific sizes
+## What changed
 
-## Power user features
+- Removed application and CLI paid-feature checks, per-session counters and trial/purchase UI
+- Removed linked payment, licence-management and crash-reporting products, plus official update feeds and support-account parameters
+- Retained user permissions for MCP, scripts, automation and file access
+- Replaced author-specific build paths, signing identities and external release tooling
+- Added explicit asset verification, regression checks and macOS CI
+- Added merge-based upstream synchronization through reviewable pull requests; conflicts and failed checks stop automation
 
-### 1. On-demand optimisation
+Updates are installed manually from this fork's releases. This fork does not use the original application's update service.
 
-Press `Ctrl`-`Shift`-`C` to manually optimise the current clipboard.
+MCP keeps upstream's permission model. It is not a sandbox: saved user-authored pipelines and Shortcuts can execute code, and the inline-script check does not recursively inspect saved pipeline names. Review those automations before allowing an agent to run them.
 
-The action works on *images*, *video* files, *paths*, *URLs*, even base64 encoded images.
+## Known limitations
 
-For more aggressive optimisation, `Ctrl`-`Shift`-`A` is also available.
+- **Secure link sharing is unavailable.** The public upstream project refers to a local WarpDrop SDK that is not supplied in its repository. This fork removes that unresolved build dependency and shows an explicit unavailable message. It does not invent links or contact the upstream sharing backend. AirDrop and the other supported sharing-app integrations remain separate
+- **iCloud settings sync is disabled by default.** Enabling it requires a distributor's own Apple capabilities and matching entitlements. Ad-hoc builds do not provide those
+- Optimiser tools are supplied by upstream in a Git LFS archive. `make assets` retrieves and verifies the pinned bytes. The tools are not independently rebuilt from source here
+- The public Lowtech utility package remains a pinned dependency. Its manifest can resolve unused payment-related packages even though this app does not link the payment or telemetry products. This repository does not vendor or relicense that package
+- Source checks do not prove that the complete macOS application builds or works. A successful macOS CI build and runtime smoke test are required before treating a binary as verified
 
+## Upstream and licensing
 
-### 2. Compatible formats
+Based on FuzzyIdeas/Clop, with original authorship and copyright notices preserved. Initial base: `af3cdb95faf330f16508ab6cd0b334053478a827` (main after v3.5.0).
 
-Clop automatically **converts** less compatible formats like `HEIC`, `tiff`, `mov` to formats understood by most devices.
+Changes in this fork are documented in [FORK_CHANGELOG.md](FORK_CHANGELOG.md). The original release history remains in [CHANGELOG.md](CHANGELOG.md). See [NOTICE.md](NOTICE.md) for provenance and distribution considerations.
 
-The conversion is fully configurable from the app settings.
-
-Original files are kept in a backup folder which can be accessed from the app menu.
-
-
-### 3. macOS Shortcuts
-
-Integrate Clop optimisation in your workflows through **native macOS Shortcuts**.
-
-- Downscale and optimise images that you email weekly
-- Download optimised images directly into your slideshow
-- ..and so on
-
-
-## Free vs Pro
-
-Free version features are free **forever**.
-
-After the **14-day trial**, the app will continue to work with the free features.
-
-
-| Feature | Clop Pro | Free version |
-|---------|----------|--------------|
-| Clipboard optimisation | ✅ | ✅ |
-| Downscale images | ✅ | ✅ |
-| Optimise screen recordings | ✅ | 5 per session |
-| Optimise screenshot files | ✅ | 5 per session |
-| On-demand optimisation | ✅ | 5 per session |
-| Shortcuts support | ✅ | 5 per session |
-
-
-## Technical details
-
-Clop uses the following open source tools for optimising files, images and videos:
-
-* `pngquant` for PNG
-* `jpegoptim` for JPEG
-* `gifsicle` for GIF
-* `ffmpeg` for videos
-* `libvips` for resizing images
-* `gifski` for converting videos to GIFs
-* `ghostscript` for optimising PDFs
-
-It may also use `libvips` for resizing images if it is installed on your system.
-
-The app is licensed under [GPLv3](https://github.com/FuzzyIdeas/Clop/blob/main/LICENSE).
-
-## What's up with the hat?
-
-*Clop* is the Romanian word for a traditional straw hat with a high crown and raised conical brim, worn more as an adorment in days of celebration.
-
-We thought *"**Cl**ipboard **Op**timizer"* sounds a bit too technical and doesn't roll off the tongue as easily. We're <b style="color: red">Rom</b><b style="color: yellow">an</b><b style="color: blue">ian</b> ourselves and we thought it might be a good idea to keep the memory of our traditions from dying completely, with whatever little we can do.
-
-## Contact
-
-For questions you can contact us through the [contact form](https://lowtechguys.com/contact?app=Clop) or we can do troubleshooting on [Discord](https://discord.gg/YeTuy6adXk) if an async discussion would take too much. 
+Contributors and distributors are responsible for satisfying the licences of the app and all dependencies, including corresponding-source obligations for any binaries they distribute.

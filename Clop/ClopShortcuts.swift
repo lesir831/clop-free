@@ -41,8 +41,6 @@ enum IntentError: Swift.Error, CustomLocalizedStringResourceConvertible {
     }
 }
 
-let shortcutsOptimisationCount = OptimisationCounter()
-
 /// Map a Shortcuts compression factor parameter to the unified per-run compression override.
 func shortcutCompression(_ factor: Int?) -> CompressionQuality? {
     guard let factor else { return nil }
@@ -135,7 +133,6 @@ struct ChangePlaybackSpeedOptimiseFileIntent: AppIntent {
                 changePlaybackSpeedBy: playbackSpeedFactor,
                 aggressiveOptimisation: aggressiveOptimisation,
                 compression: shortcutCompression(compressionFactor),
-                optimisationCount: shortcutsOptimisationCount,
                 copyToClipboard: false, source: .shortcuts,
                 output: output,
                 removeAudio: removeAudio
@@ -424,7 +421,6 @@ struct CropOptimiseFileIntent: AppIntent {
                 cropTo: CropSize(width: (longEdge ? size : width) ?? 0, height: (longEdge ? size : height) ?? 0, longEdge: longEdge, isAspectRatio: isAspectRatio),
                 aggressiveOptimisation: aggressiveOptimisation,
                 compression: shortcutCompression(compressionFactor),
-                optimisationCount: shortcutsOptimisationCount,
                 copyToClipboard: copyToClipboard,
                 source: .shortcuts,
                 output: output,
@@ -655,7 +651,6 @@ struct OptimiseFileIntent: AppIntent {
                 pdfDPI: pdfDpi?.dpi,
                 compression: shortcutCompression(compressionFactor),
                 audioBitrate: audioBitrate,
-                optimisationCount: shortcutsOptimisationCount,
                 copyToClipboard: copyToClipboard,
                 source: .shortcuts,
                 output: overwrite ? nil : output,
@@ -789,7 +784,6 @@ struct DownscaleFileIntent: AppIntent {
                 downscaleTo: downscaleFactor,
                 aggressiveOptimisation: aggressiveOptimisation,
                 compression: shortcutCompression(compressionFactor),
-                optimisationCount: shortcutsOptimisationCount,
                 copyToClipboard: copyToClipboard,
                 source: .shortcuts,
                 output: overwrite ? nil : output,
@@ -913,7 +907,6 @@ struct OptimiseURLIntent: AppIntent {
                 aggressiveOptimisation: aggressiveOptimisation,
                 compression: shortcutCompression(compressionFactor),
                 audioBitrate: audioBitrate,
-                optimisationCount: shortcutsOptimisationCount,
                 copyToClipboard: copyToClipboard,
                 source: .shortcuts,
                 output: output,

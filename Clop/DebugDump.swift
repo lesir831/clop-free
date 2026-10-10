@@ -33,13 +33,13 @@ enum DebugDump {
         }
     }
 
-    static let outputDir = URL(fileURLWithPath: "/tmp/clop-debug", isDirectory: true)
+    static let outputDir = URL(fileURLWithPath: "/tmp/clop-free-debug", isDirectory: true)
 
     static let confirmationDescription = """
     Collects diagnostic data and bundles it into a single zip:
 
-      • App, license tier and system info
-      • Settings (license codes and emails are redacted)
+      • App version and system info
+      • Settings (values with sensitive key names are redacted)
       • Current and recent optimisation results with errors
       • Saved pipelines, automations and watched folders
       • Bundled binaries health check (ffmpeg, ghostscript etc.)
@@ -50,7 +50,7 @@ enum DebugDump {
         changes (reproduce the issue while it runs)
       • Logs from the last 24 hours
 
-    The zip is written to /tmp/clop-debug and revealed in Finder so you can \
+    The zip is written to /tmp/clop-free-debug and revealed in Finder so you can \
     attach it when contacting the developer. Nothing leaves your machine on its own.
 
     Collection takes about a minute.
@@ -138,7 +138,6 @@ enum DebugDump {
 
             await setPhase("Copying crash reports…")
             copyCrashReports(to: workDir.appendingPathComponent("crashes", isDirectory: true))
-            copySyncLog(to: workDir)
 
             // 30s capture window: stream this app's log live via `log stream
             // --level debug`. Debug (and unfetched info) entries are never
@@ -185,11 +184,11 @@ enum DebugDump {
     private static func appInfoSnapshot() -> String {
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
         var lines = [
-            "Clop v\(Bundle.main.version) (build \(build))",
+            "Clop Free v\(Bundle.main.version) (build \(build))",
             "macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
             "architecture: \(ARCH)",
             "locale: \(Locale.current.identifier)",
-            "license: \(proactive ? "Pro" : "Free")",
+            "license: GNU GPL v3 (independent Clop Free fork)",
             "dump created: \(Date())",
             "",
             "workdir: \(FilePath.workdir.string)",
@@ -207,7 +206,7 @@ enum DebugDump {
     /// identity-shaped redacted. Keys still at their default value don't
     /// appear; `settings.json` shows what the user changed.
     private static func settingsSnapshot() throws -> Data {
-        let domain = UserDefaults.standard.persistentDomain(forName: Bundle.main.bundleIdentifier ?? "com.lowtechguys.Clop") ?? [:]
+        let domain = UserDefaults.standard.persistentDomain(forName: Bundle.main.bundleIdentifier ?? "com.clop-free.Clop") ?? [:]
         let sensitive = ["license", "licence", "serial", "email", "activation", "paddle", "token", "secret", "password"]
         var out: [String: Any] = [:]
         for (key, value) in domain {
@@ -262,10 +261,6 @@ enum DebugDump {
             describe(o)
         }
         lines.append("")
-        lines.append("# Skipped because of free version limits (\(OM.skippedBecauseNotPro.count))")
-        for url in OM.skippedBecauseNotPro {
-            lines.append("  - \(url.path)")
-        }
         return lines.joined(separator: "\n") + "\n"
     }
 
@@ -426,16 +421,6 @@ enum DebugDump {
                 try? handle.close()
             }
         }
-    }
-
-    /// The licensing sync log from the app's caches folder, if one was written.
-    private static func copySyncLog(to dest: URL) {
-        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
-        let syncLog = caches
-            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.lowtechguys.Clop")
-            .appendingPathComponent("sync.log")
-        guard FileManager.default.fileExists(atPath: syncLog.path) else { return }
-        try? FileManager.default.copyItem(at: syncLog, to: dest.appendingPathComponent("sync.log"))
     }
 
     private static func copyCrashReports(to dest: URL) {

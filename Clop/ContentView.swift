@@ -8,16 +8,12 @@
 import Defaults
 import LaunchAtLogin
 import Lowtech
-import LowtechIndie
-import LowtechPro
 import SwiftUI
 import System
 
 // MARK: - MenuView
 
 struct MenuView: View {
-    @ObservedObject var um = UM
-    @ObservedObject var pm = PM
     @ObservedObject var om = OM
     @ObservedObject var wdm = WDM
     @ObservedObject var lastApp = LastFocusedAppTracker.shared
@@ -35,20 +31,6 @@ struct MenuView: View {
     @Default(.clipboardIgnoredAppBundleIds) var clipboardIgnoredAppBundleIds
 
     @State var cliInstallResult: String?
-
-    var proErrors: some View {
-        Section("Skipped items because of free version limits") {
-            ForEach(om.skippedBecauseNotPro, id: \.self) { url in
-                let str = url.isFileURL ? url.filePath!.shellString : url.absoluteString
-                Button("    \(str.count > 50 ? (str.prefix(25) + "..." + str.suffix(15)) : str)") {
-                    QuickLooker.quicklook(url: url)
-                }
-            }
-            Button("Get Clop Pro") {
-                manageLicenceInSettings()
-            }
-        }
-    }
 
     var body: some View {
         Button("Settings") {
@@ -192,39 +174,26 @@ struct MenuView: View {
             }
         }
 
-        if !proactive, !om.skippedBecauseNotPro.isEmpty {
-            proErrors
-        }
-
-        Menu("About...") {
-            Button("Contact the developer") {
+        Menu("About Clop Free") {
+            Text("Clop Free is an independent GPLv3 fork")
+            Text("Based on Clop by Alin Panaitiu / The low-tech guys")
+            Button("Project source & support") {
                 NSWorkspace.shared.open(contactURL())
+            }
+            Button("Upstream Clop source") {
+                NSWorkspace.shared.open(URL(string: "https://github.com/FuzzyIdeas/Clop")!)
+            }
+            Button("GNU General Public License v3") {
+                NSWorkspace.shared.open(URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!)
             }
             Button("Create debug dump") {
                 DebugDump.confirmAndRun()
             }
-            Button("Privacy policy") {
-                NSWorkspace.shared.open("https://lowtechguys.com/clop/privacy".url!)
-            }
-            Text("License: \(proactive ? "Pro" : "Free")")
-            #if DEBUG
-                Button("Reset Trial") {
-                    product?.resetTrial()
-                }
-                Button("Expire Trial") {
-                    product?.expireTrial()
-                }
-            #endif
             Text("Version: v\(Bundle.main.version)")
         }
 
-        Button("Manage license") {
-            manageLicenceInSettings()
-        }
-
-        Button(um.newVersion != nil ? "v\(um.newVersion!) update available" : "Check for updates") {
-            checkForUpdates()
-            focus()
+        Button("Clop Free releases") {
+            NSWorkspace.shared.open(forkReleasesURL)
         }
 
         Toggle("Show Clop UI in screenshots", isOn: $allowClopToAppearInScreenshots)
@@ -237,20 +206,9 @@ struct MenuView: View {
 }
 
 func contactURL() -> URL {
-    guard var urlBuilder = URLComponents(url: "https://lowtechguys.com/contact".url!, resolvingAgainstBaseURL: false) else {
-        return "https://lowtechguys.com/contact".url!
-    }
-    urlBuilder.queryItems = [URLQueryItem(name: "userid", value: SERIAL_NUMBER_HASH), URLQueryItem(name: "app", value: "Clop")]
-
-    if let licenseCode = product?.licenseCode {
-        urlBuilder.queryItems?.append(URLQueryItem(name: "code", value: licenseCode))
-    }
-
-    if let email = product?.activationEmail {
-        urlBuilder.queryItems?.append(URLQueryItem(name: "email", value: email))
-    }
-
-    return urlBuilder.url ?? "https://lowtechguys.com/contact".url!
+    // Support for this independent fork belongs with its own source repository.
+    // Never send upstream license codes, email addresses or device identifiers.
+    forkRepositoryURL
 }
 
 extension View {

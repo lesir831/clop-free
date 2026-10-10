@@ -3,14 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>DeveloperName</key>
-	<string>The low-tech guys</string>
-
-	<key>Website</key>
-	<string>https://lowtechguys.com/clop</string>
-
+	<string>clop-free contributors</string>
 	<key>ApplicationDescription</key>
 	<string>Image, video, PDF and clipboard optimiser</string>
-
 	<key>Services</key>
 	<array>
 		<dict>
@@ -21,7 +16,6 @@
 			<key>Purpose</key>
 			<string>Used for downloading files from URLs dragged to the drop zone.</string>
 		</dict>
-
 		<dict>
 			<key>Identifier</key>
 			<string>net.mkswap.Dropshare5</string>
@@ -30,7 +24,6 @@
 			<key>Purpose</key>
 			<string>Used to upload optimised files using Dropshare.</string>
 		</dict>
-
 		<dict>
 			<key>Identifier</key>
 			<string>net.mkswap.Dropshare-setapp</string>
@@ -39,7 +32,6 @@
 			<key>Purpose</key>
 			<string>Used to upload optimised files using Dropshare (Setapp variant).</string>
 		</dict>
-
 		<dict>
 			<key>Identifier</key>
 			<string>me.damir.dropover-mac</string>
@@ -56,7 +48,6 @@
 			<key>Purpose</key>
 			<string>Used to shelf files with Yoink.</string>
 		</dict>
-
 		<dict>
 			<key>Identifier</key>
 			<string>at.EternalStorms.Yoink-setapp</string>
@@ -65,7 +56,6 @@
 			<key>Purpose</key>
 			<string>Used to shelf files with Yoink (Setapp variant).</string>
 		</dict>
-
 		<dict>
 			<key>Identifier</key>
 			<string>at.EternalStorms.Yoink-demo</string>
@@ -74,7 +64,6 @@
 			<key>Purpose</key>
 			<string>Used to shelf files with Yoink (demo variant).</string>
 		</dict>
-
 		<dict>
 			<key>Identifier</key>
 			<string>com.hachipoo.Dockside</string>
@@ -84,42 +73,7 @@
 			<string>Used to dock and manage files via Dockside.</string>
 		</dict>
 	</array>
-
 	<key>Connections</key>
-	<array>
-		<dict>
-			<key>IsIncoming</key>
-			<false/>
-			<key>Host</key>
-			<string>o84592.ingest.sentry.io, sentry.io</string>
-			<key>NetworkProtocol</key>
-			<string>TCP</string>
-			<key>Port</key>
-			<string>80, 443</string>
-			<key>Relevance</key>
-			<string>Essential</string>
-			<key>Purpose</key>
-			<string>Send crash and usage reports (can be disabled in settings).</string>
-			<key>DenyConsequences</key>
-			<string>If you deny these connections, crash and diagnostics reporting will not be sent to the developer which may hinder issue diagnosis.</string>
-		</dict>
-
-		<dict>
-			<key>IsIncoming</key>
-			<false/>
-			<key>Host</key>
-			<string>paddle.com, checkout.paddle.com, vendors.paddle.com, paddleapi.com, v3.paddleapi.com</string>
-			<key>NetworkProtocol</key>
-			<string>TCP</string>
-			<key>Port</key>
-			<string>80, 443</string>
-			<key>Relevance</key>
-			<string>Essential</string>
-			<key>Purpose</key>
-			<string>Handle licensing, trials, purchase flow, and license validation.</string>
-			<key>DenyConsequences</key>
-			<string>If you deny these connections, in-app purchases, license verification, and trial functionality may not work correctly.</string>
-		</dict>
-	</array>
+	<array/>
 </dict>
 </plist>

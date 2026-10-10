@@ -107,22 +107,9 @@ extension MCPServer {
         return .text(out.isEmpty ? "Done." : out)
     }
 
-    /// Clop's own refusals are the words the agent should read, so they come back verbatim. Only the
-    /// next step is added, and it is always "ask the user", never anything about quitting or
-    /// reopening Clop: MCP is Pro so relaunching buys an agent nothing on this path, but the same
-    /// words would teach the trick for the CLI and Shortcuts paths, whose free counters do reset on
-    /// relaunch by design.
+    /// Preserve the refusal and add the user's opt-in step where useful.
     static func annotate(_ message: String) -> String {
         let low = message.lowercased()
-        if low.contains("clop pro") {
-            // Clop already said which licence it wants, so only the next step is added.
-            return message + " The user can buy a licence at \(buyURL)."
-        }
-        // A whole word, not a substring: "process", "provide" and "property" all contain "pro", and
-        // each of them used to get a licence pitch bolted onto an unrelated error.
-        if low.range(of: "\\bpro\\b", options: .regularExpression) != nil {
-            return message + " Clop's MCP server needs Clop Pro. The user can buy a licence at \(buyURL)."
-        }
         if low.contains("script"), low.contains("allow") {
             return message + " Script steps are behind their own switch. Ask the user to allow them in "
                 + "Clop Settings, MCP. Prefer a built-in step: it is faster, the editor understands it, "
@@ -283,14 +270,14 @@ extension MCPServer {
 extension MCPServer {
     /// The discovery card the app writes on every launch. A hint, never a requirement.
     static func card() -> [String: Any] {
-        let path = ("~/.well-known/mcp/clop.json" as NSString).expandingTildeInPath
+        let path = ("~/.well-known/mcp/clop-free.json" as NSString).expandingTildeInPath
         guard let data = FileManager.default.contents(atPath: path),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [:] }
         return object
     }
 
-    /// Hands `clop://mcp/<action>` to the app, launching it if it is not running.
+    /// Hands `clop-free://mcp/<action>` to the app, launching it if it is not running.
     ///
     /// Aimed at the app the card names: with a debug build next to /Applications, plain `open` picks
     /// whichever LaunchServices prefers, which may not be the one this server belongs to.
@@ -298,9 +285,9 @@ extension MCPServer {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
         if let app = (card()["app"] as? [String: Any])?["path"] as? String, FileManager.default.fileExists(atPath: app) {
-            process.arguments = ["-a", app, "clop://mcp/\(action)"]
+            process.arguments = ["-a", app, "clop-free://mcp/\(action)"]
         } else {
-            process.arguments = ["clop://mcp/\(action)"]
+            process.arguments = ["clop-free://mcp/\(action)"]
         }
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
@@ -314,7 +301,7 @@ extension MCPServer {
 
     /// Asks Clop to allow changes through MCP, launching it if it is not running.
     ///
-    /// Opening the URL is what makes this work while nothing is listening: macOS hands `clop://` to
+    /// Opening the URL is what makes this work while nothing is listening: macOS hands `clop-free://` to
     /// the app and launches it first if needed. Clop then shows an alert and waits for a person, so
     /// the wait here is a person's wait.
     static func startServer(wait: TimeInterval = 90) throws -> ToolOutput {
@@ -330,12 +317,6 @@ extension MCPServer {
                 return try status()
             }
             Thread.sleep(forTimeInterval: 0.4)
-        }
-        // The card is rewritten when Clop handles the URL, so re-reading it after the wait tells a
-        // licence refusal apart from an unanswered dialog.
-        if card()["pro"] as? Bool == false {
-            throw ClopMCPError("Clop's MCP server needs Clop Pro. Nothing changed. "
-                + "The user can buy a licence at \(buyURL).")
         }
         throw ClopMCPError("Clop asked and the answer did not come (or it was no). Nothing changed. "
             + "Ask the user to allow it in Clop Settings, MCP.")
@@ -365,10 +346,7 @@ extension MCPServer {
 
     /// Raises if a file operation is going to be refused anyway.
     ///
-    /// Elicitation costs the USER something: a dialog, or a question in the chat. Asking which way
-    /// they want a file made smaller and then answering "needs Clop Pro" spends their attention on a
-    /// decision that was never going to be acted on. Checked only before a question, since the
-    /// ordinary path already surfaces Clop's own refusal.
+    /// Check the user's permission before asking how to perform an operation.
     ///
     /// A path that is not there is the same waste, and it was the likelier one: an agent that
     /// mistyped a path got asked how it wanted the file made smaller, and only after the answer came
@@ -385,9 +363,6 @@ extension MCPServer {
               let mcp = (payload as? [String: Any])?["mcp"] as? [String: Any]
         else {
             return // If status cannot be read, let the real call produce the real error.
-        }
-        guard mcp["pro"] as? Bool == true else {
-            throw ClopMCPError(annotate("Clop's MCP server needs Clop Pro."))
         }
         guard mcp["enabled"] as? Bool == true else {
             throw ClopMCPError(annotate(

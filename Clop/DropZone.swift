@@ -16,7 +16,6 @@ let MAC26 = if #available(macOS 26.0, *) {
 class DragManager: ObservableObject {
     @MainActor @Published var dragHovering = false
     @MainActor @Published var itemsToOptimise: [ClipboardType] = []
-    let optimisationCount = OptimisationCounter()
 
     @MainActor @Published var dropZoneAtCursor = false
 
@@ -195,9 +194,6 @@ struct DropZonePresetsViewDelegate: DropDelegate {
             return false
         }
 
-        if DM.optimisationCount.used == 5 {
-            DM.optimisationCount.used += 1
-        }
         return optimiseDroppedItems(info.itemProviders(for: IMAGE_FORMATS + AUDIO_FORMATS + VIDEO_FORMATS + [.plainText, .utf8PlainText, .url, .fileURL, .aliasFile, .pdf]), copy: NSEvent.modifierFlags.contains(.option), preset: preset)
     }
 }
@@ -596,9 +592,6 @@ extension DropZoneView: DropDelegate {
     func performDrop(info: DropInfo) -> Bool {
         dragManager.dragHovering = false
         dragManager.dropped = true
-        if dragManager.optimisationCount.used == 5 {
-            dragManager.optimisationCount.used += 1
-        }
 
         let thumbnails: [NSItemProvider] = info.hasItemsConforming(to: VIDEO_FORMATS) ? info.itemProviders(for: IMAGE_FORMATS) : []
         let filenames: [NSItemProvider] = info.itemProviders(for: [.url, .fileURL, .aliasFile])
@@ -767,7 +760,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
     }
 
     let itemsToOptimise = DM.itemsToOptimise
-    let itemProvidersCount = itemProviders.count
     let copyToClipboard = Defaults[.autoCopyToClipboard]
 
     // Batch mode: a large pile of dropped files goes to the lightweight engine + window instead of one
@@ -777,17 +769,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
     // (it goes through optimiseFile → optimiseDir, which has its own batch routing).
     let droppedFileProviders = filenames.filter { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }
     if Defaults[.useBatchModeForFolders], droppedFileProviders.count > Defaults[.batchModeFileCountThreshold] {
-        // Optimising more files than the batch threshold in one drop is a Pro feature: surface a
-        // visible Pro error instead of silently optimising the whole pile one-by-one for free.
-        guard proactive else {
-            let optimiser = OM.optimiser(id: Optimiser.IDs.pro, type: .unknown, operation: "")
-            optimiser.finish(
-                error: "Batch optimisation is a Pro feature",
-                notice: "Get Clop Pro to optimise large drops in one window,\nor drop fewer than \(Defaults[.batchModeFileCountThreshold]) files at a time.",
-                keepFor: 7000
-            )
-            return true
-        }
         tryAsync {
             var paths: [FilePath] = []
             for provider in droppedFileProviders {
@@ -811,21 +792,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
             BAT.prepare(paths: paths, source: .dropZone)
             BAT.showWindow()
         }
-        return true
-    }
-
-    // Free tier is limited to 5 optimisations. Optimising more than that in a single drop is a Pro
-    // feature: gate it here, before fanning each file out into its own task, so a big drop gets one
-    // notice instead of five results and a refusal for the rest. A handful of files still goes
-    // through for free.
-    let droppedItemCount = max(itemProvidersCount, droppedFileProviders.count)
-    if !proactive, droppedItemCount > 5 {
-        let optimiser = OM.optimiser(id: Optimiser.IDs.pro, type: .unknown, operation: "")
-        optimiser.finish(
-            error: "Optimising more than 5 files at once is a Pro feature",
-            notice: "Get Clop Pro to remove the limit,\nor drop 5 or fewer files at a time.",
-            keepFor: 7000
-        )
         return true
     }
 
@@ -870,7 +836,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                             item,
                             id: item.id,
                             aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                            optimisationCount: DM.optimisationCount,
                             copyToClipboard: copyToClipboard,
                             source: .dropZone,
                             output: output,
@@ -900,7 +865,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                         .image(image),
                         id: image.path.string,
                         aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                        optimisationCount: DM.optimisationCount,
                         copyToClipboard: copyToClipboard,
                         source: .dropZone,
                         output: output,
@@ -946,7 +910,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                                 item,
                                 id: item.id,
                                 aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                                optimisationCount: DM.optimisationCount,
                                 copyToClipboard: copyToClipboard,
                                 source: .dropZone,
                                 output: output,
@@ -988,7 +951,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                                 item,
                                 id: item.id,
                                 aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                                optimisationCount: DM.optimisationCount,
                                 copyToClipboard: copyToClipboard,
                                 source: .dropZone,
                                 output: output,
@@ -1012,7 +974,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                             .file(path),
                             id: path.string,
                             aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                            optimisationCount: DM.optimisationCount,
                             copyToClipboard: copyToClipboard,
                             source: .dropZone,
                             output: output,
@@ -1025,7 +986,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                             .url(url),
                             id: url.absoluteString,
                             aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                            optimisationCount: DM.optimisationCount,
                             copyToClipboard: copyToClipboard,
                             source: .dropZone,
                             output: output,
@@ -1043,7 +1003,6 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
                         .url(url),
                         id: url.absoluteString,
                         aggressiveOptimisation: pipeline?.skipOptimisation == true ? false : aggressive,
-                        optimisationCount: DM.optimisationCount,
                         copyToClipboard: copyToClipboard,
                         source: .dropZone,
                         output: output,
@@ -1075,9 +1034,8 @@ func optimiseDir(path dir: FilePath, aggressive: Bool? = nil, source: Optimisati
     let urls = getURLsFromFolder(dir.url, recursive: true, types: types)
 
     // Batch mode: a large folder is handed to the lightweight engine + native window instead of one
-    // heavy Optimiser/thumbnail per file. Pro-only; free users fall through to the per-file proGuard
-    // path below (capped at the free limit).
-    if Defaults[.useBatchModeForFolders], proactive, urls.count > Defaults[.batchModeFileCountThreshold] {
+    // heavy Optimiser/thumbnail per file.
+    if Defaults[.useBatchModeForFolders], urls.count > Defaults[.batchModeFileCountThreshold] {
         let paths = urls.compactMap(\.filePath)
         // Drops open the prepare panel (review knobs, then Optimise); the CLI auto-starts instead.
         BAT.prepare(paths: paths, source: source ?? .dir(dir.string))
@@ -1089,8 +1047,8 @@ func optimiseDir(path dir: FilePath, aggressive: Bool? = nil, source: Optimisati
         for url in urls {
             let path = url.filePath!
             let added = group.addTaskUnlessCancelled {
-                _ = try await proGuard(count: DM.optimisationCount, url: path.url) {
-                    try await optimiseItem(.file(path), id: path.string, aggressiveOptimisation: aggressive, optimisationCount: manualOptimisationCount, copyToClipboard: false, source: source, output: output)
+                _ = try await performOptimisation {
+                    try await optimiseItem(.file(path), id: path.string, aggressiveOptimisation: aggressive, copyToClipboard: false, source: source, output: output)
                 }
             }
             guard added else { break }
@@ -1108,7 +1066,7 @@ func optimiseFile(from item: NSSecureCoding?, identifier: String, aggressive: Bo
         try await optimiseDir(path: path, aggressive: aggressive, source: source, output: output, types: ALL_FORMATS)
         return
     }
-    _ = try await proGuard(count: DM.optimisationCount, url: path.url) { () async throws -> ClipboardType? in
+    _ = try await performOptimisation { () async throws -> ClipboardType? in
         if await skipOptimiseAndRunPipelineIfEncoding(pipeline, path: path, source: source) {
             return nil
         }
@@ -1118,7 +1076,6 @@ func optimiseFile(from item: NSSecureCoding?, identifier: String, aggressive: Bo
             .file(path),
             id: path.string,
             aggressiveOptimisation: skipOpt ? false : aggressive,
-            optimisationCount: manualOptimisationCount,
             copyToClipboard: Defaults[.autoCopyToClipboard],
             source: source,
             output: output,

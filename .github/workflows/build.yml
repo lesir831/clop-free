@@ -1,0 +1,55 @@
+name: Build clop-free
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: make check
+      - run: bash -n Scripts/build.sh Scripts/fetch-assets.sh Scripts/sync-upstream.sh
+
+  macos:
+    needs: checks
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Show toolchain
+        run: xcodebuild -version && swift --version && python3 --version
+      - name: Exercise actual feature-policy functions
+        run: python3 Scripts/test_feature_policy.py
+      - name: Fetch pinned optimizer assets
+        run: make assets
+      - name: Build universal app with ad-hoc signing
+        run: make package
+      - name: Include matching application source
+        run: git archive --format=tar.gz --output=build/clop-free-source.tar.gz HEAD
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: clop-free-adhoc-${{ github.sha }}
+          path: |
+            build/clop-free.zip
+            build/clop-free.zip.sha256
+            build/clop-free-source.tar.gz
+            LICENSE
+          if-no-files-found: error
+          retention-days: 14

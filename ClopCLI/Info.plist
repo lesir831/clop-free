@@ -3,25 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.lowtechguys.Clop.CLI</string>
-	<key>OSLogPreferences</key>
-	<dict>
-		<key>com.lowtechguys.Clop.CLI</key>
-		<dict>
-			<key>DEFAULT-OPTIONS</key>
-			<dict>
-				<key>Enable-Private-Data</key>
-				<true/>
-			</dict>
-		</dict>
-		<key>com.lowtechguys.Clop</key>
-		<dict>
-			<key>DEFAULT-OPTIONS</key>
-			<dict>
-				<key>Enable-Private-Data</key>
-				<true/>
-			</dict>
-		</dict>
-	</dict>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Clop Free uses automation to communicate with the app and run your selected workflows.</string>
 </dict>
 </plist>

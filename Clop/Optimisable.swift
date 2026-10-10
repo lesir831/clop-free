@@ -15,7 +15,7 @@ import UniformTypeIdentifiers
 private let log = Logger(subsystem: LOG_SUBSYSTEM, category: "Optimisable")
 
 /// Placeholder-icon lookups run here so LaunchServices never blocks the main actor.
-let thumbnailQueue = DispatchQueue(label: "\(Bundle.main.bundleIdentifier ?? "com.lowtechguys.Clop").thumbnail", qos: .userInitiated)
+let thumbnailQueue = DispatchQueue(label: "\(Bundle.main.bundleIdentifier ?? "com.clop-free.Clop").thumbnail", qos: .userInitiated)
 
 class Optimisable {
     required init(_ path: FilePath, thumb: Bool = true, id: String? = nil) {

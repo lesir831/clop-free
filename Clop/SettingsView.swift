@@ -2157,20 +2157,11 @@ struct KeysSettingsView: View {
 
 }
 
-import LowtechIndie
-import LowtechPro
-import LowtechProSentry
-
 struct MadeBy: View {
     var body: some View {
         HStack(spacing: 6) {
-            SwiftUI.Image("lowtech")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 24, height: 24)
-                .opacity(0.7)
-            Text("by")
-            Link("The low-tech guys", destination: "https://lowtechguys.com/".url!)
+            Text("Based on")
+            Link("Clop by The low-tech guys", destination: URL(string: "https://github.com/FuzzyIdeas/Clop")!)
                 .bold()
                 .foregroundColor(.primary)
                 .underline()
@@ -2181,39 +2172,45 @@ struct MadeBy: View {
 }
 
 struct LicenseUpdatesSettingsView: View {
-    @ObservedObject var um: UpdateManager = UM
-    @ObservedObject var pm: ProManager = PM
-
     var body: some View {
-        if let pro = pm.pro, let updater = um.updater {
-            Form {
-                LicenseAndUpdatesView(pro: pro, updater: updater, appName: "Clop", changelogURL: URL(string: "https://files.lowtechguys.com/clop/changelog.html"))
+        Form {
+            Section(header: SectionHeader(title: "Free software")) {
+                Text("Clop Free is an independent fork of Clop, distributed under the GNU General Public License v3. All optimisation features are available without a purchase, trial or activation.")
+                Link("Read the GNU GPL v3", destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!)
+                Link("Clop Free source code", destination: forkRepositoryURL)
             }
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-        } else {
-            ProgressView()
-                .fill()
+            Section(header: SectionHeader(title: "Releases")) {
+                Text("Version: v\(Bundle.main.version)")
+                Text("Updates are installed manually. Download releases from the Clop Free project; this fork does not use the upstream app's update service.")
+                Link("View Clop Free releases", destination: forkReleasesURL)
+            }
         }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
     }
 }
 
 struct AboutSettingsView: View {
-    @ObservedObject var um: UpdateManager = UM
-    @ObservedObject var pm: ProManager = PM
-
     var body: some View {
-        AboutView(
-            appName: "Clop",
-            pro: pm.pro,
-            updater: um.updater,
-            websiteURL: URL(string: "https://lowtechguys.com/clop"),
-            contactURL: URL(string: "https://lowtechguys.com/contact?app=Clop"),
-            discordURL: URL(string: "https://discord.gg/YeTuy6adXk"),
-            sourceURL: URL(string: "https://github.com/FuzzyIdeas/Clop"),
-            changelogURL: URL(string: "https://files.lowtechguys.com/clop/changelog.html")
-        )
-        .fill()
+        Form {
+            Section(header: SectionHeader(title: "Clop Free")) {
+                Text("An independent, open-source fork of Clop. This project is not affiliated with or endorsed by the upstream authors.")
+                Text("Version: v\(Bundle.main.version)")
+                Link("Project source & support", destination: forkRepositoryURL)
+            }
+            Section(header: SectionHeader(title: "Attribution & license")) {
+                Text("Based on Clop by Alin Panaitiu and The low-tech guys. Original copyright and source attribution are preserved.")
+                Link("Upstream: FuzzyIdeas/Clop", destination: URL(string: "https://github.com/FuzzyIdeas/Clop")!)
+                Link("GNU General Public License v3", destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!)
+                Text("This software is provided without warranty, as described in the license.")
+            }
+            Section(header: SectionHeader(title: "Diagnostics")) {
+                Text("Crash-report telemetry is disabled in this fork. Debug dumps are created locally only when requested; review them before sharing, as they can contain file paths, settings and clipboard activity.")
+                Button("Create debug dump") { DebugDump.confirmAndRun() }
+            }
+        }
+        .formStyle(.grouped)
+        .scrollContentBackground(.hidden)
     }
 }
 
@@ -2873,6 +2870,21 @@ struct GeneralSettingsView: View {
     @Default(.workdir) var workdir
     @Default(.workdirCleanupInterval) var workdirCleanupInterval
 
+    /// Build opt-in only: a distributor must configure and sign their own iCloud entitlements.
+    private var iCloudSyncAvailable: Bool {
+        Bundle.main.object(forInfoDictionaryKey: "ClopFreeICloudEnabled") as? Bool ?? false
+    }
+
+    private var iCloudSyncBinding: Binding<Bool> {
+        Binding(
+            get: { iCloudSyncAvailable && syncSettingsCloud },
+            set: { value in
+                guard iCloudSyncAvailable else { return }
+                syncSettingsCloud = value
+            }
+        )
+    }
+
     var workdirBinding: Binding<String> {
         Binding(
             get: { workdir.shellString },
@@ -2920,8 +2932,14 @@ struct GeneralSettingsView: View {
             }
             LaunchAtLogin.Toggle()
                 .accessibilityLabel("Launch at login")
-            Toggle("Sync settings with other Macs via iCloud", isOn: $syncSettingsCloud)
+            Toggle("Sync settings with other Macs via iCloud", isOn: iCloudSyncBinding)
+                .disabled(!iCloudSyncAvailable)
                 .searchAnchor("general.main.syncSettingsCloud", namesControl: true)
+            Text(iCloudSyncAvailable
+                 ? "iCloud sync requires a build signed with its distributor's own iCloud entitlements and Macs signed in to the same iCloud account."
+                 : "iCloud sync is unavailable in this build. It requires a separately signed build configured with the distributor's own iCloud entitlements; ad-hoc signing does not enable it.")
+                .font(.footnote)
+                .foregroundColor(.secondary)
             HStack {
                 Text("Secure send links expire after")
                 Spacer()
@@ -2935,6 +2953,13 @@ struct GeneralSettingsView: View {
                 .labelsHidden()
                 .frame(width: 150)
                 .searchAnchor("general.main.defaultLinkExpiration")
+            }
+            .disabled(!WARP_DROP_AVAILABLE)
+            .help(WARP_DROP_AVAILABLE ? "Default expiration for secure send links" : WARP_DROP_UNAVAILABLE_MESSAGE)
+            if !WARP_DROP_AVAILABLE {
+                Text(WARP_DROP_UNAVAILABLE_MESSAGE)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
             }
 
             Section(header: SectionHeader(title: "Edit with external app", subtitle: "Hand an optimised file to an editor of your choice with ⌘E or the right-click menu")) {
@@ -3007,13 +3032,6 @@ struct GeneralSettingsView: View {
                         + Text("\nIncrease if files on iCloud Drive get optimised twice").round(11, weight: .regular).foregroundColor(.secondary)
                 }
                 .searchAnchor("general.optimisation.optimisedFileProtectionMs", namesControl: true)
-            }
-
-            Section(header: SectionHeader(title: "Privacy")) {
-                SentryToggleRow(
-                    title: "Send error reports",
-                    subtitle: "Help improve Clop by sending anonymous crash and error reports to the developer"
-                )
             }
         }
         .scrollContentBackground(.hidden)
@@ -3159,7 +3177,7 @@ struct SettingsView: View {
             case .pipelines: "Pipelines"
             case .automation: "Automation"
             case .mcp: "MCP"
-            case .licenseUpdates: "License & updates"
+            case .licenseUpdates: "License & releases"
             case .about: "About"
             }
         }

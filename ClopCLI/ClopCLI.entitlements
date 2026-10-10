@@ -4,12 +4,14 @@
 <dict>
 	<key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
 	<array>
-		<string>com.lowtechguys.Clop.optimisationService</string>
-		<string>com.lowtechguys.Clop.optimisationServiceStop</string>
+		<string>com.clop-free.Clop.optimisationService</string>
+		<string>com.clop-free.Clop.optimisationServiceStop</string>
 	</array>
 	<key>com.apple.security.temporary-exception.mach-register.global-name</key>
 	<array>
-		<string>com.lowtechguys.Clop.optimisationServiceResponseCLI</string>
+		<string>com.clop-free.Clop.optimisationServiceResponseCLI</string>
 	</array>
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
 </dict>
 </plist>

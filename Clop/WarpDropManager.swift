@@ -1,10 +1,15 @@
 import Cocoa
-import Defaults
+import Combine
 import Foundation
 import os
-import WarpDrop
 
 private let log = Logger(subsystem: LOG_SUBSYSTEM, category: "WarpDrop")
+
+/// Upstream references an author-local package that is not part of this source tree.
+/// Clop Free does not silently contact the upstream relay or claim to create a link.
+/// The session model remains so existing settings and pipeline files still decode.
+let WARP_DROP_AVAILABLE = false
+let WARP_DROP_UNAVAILABLE_MESSAGE = "Secure link sharing is unavailable in Clop Free because no independent sharing backend is configured. Use AirDrop or another sharing app."
 
 // MARK: - Link expiration
 
@@ -70,13 +75,9 @@ struct WarpDropSession: Identifiable {
         return "Expires in \(expirationDurationLabel(remaining))"
     }
 
-    var directURL: String {
-        "https://drop.lowtechguys.com/d/\(id)"
-    }
-
-    var roomURL: String {
-        "https://drop.lowtechguys.com/r/\(id)"
-    }
+    /// A future independent provider must supply its real URLs explicitly.
+    let directURL: String
+    let roomURL: String
 
     var shareURL: String {
         files.count == 1 ? directURL : roomURL
@@ -102,16 +103,10 @@ struct WarpDropSession: Identifiable {
 class WarpDropManager: ObservableObject {
     static let shared = WarpDropManager()
 
-    @Published var sessions: [WarpDropSession] = []
-
-    /// Paths of files whose transfer has been started but whose room hasn't been
-    /// created yet. A live session only appears in `sessions` once the server
-    /// returns a room ID (up to 30s later), so this tracks the in-between window
-    /// to stop a second trigger from creating a duplicate link for the same file.
-    @Published private(set) var connectingPaths: Set<String> = []
+    @Published private(set) var sessions: [WarpDropSession] = []
 
     var hasSessions: Bool {
-        sessions.isNotEmpty
+        !sessions.isEmpty
     }
 
     func session(forPath path: String) -> WarpDropSession? {
@@ -123,51 +118,12 @@ class WarpDropManager: ObservableObject {
         return session(forPath: path)
     }
 
-    func isConnecting(path: String?) -> Bool {
-        guard let path else { return false }
-        return connectingPaths.contains(path)
-    }
-
-    /// A file is "active" if it already has a live session or a send in flight.
-    func isActive(path: String) -> Bool {
-        connectingPaths.contains(path) || session(forPath: path) != nil
-    }
-
-    /// Reserve the given files for sending and return only the subset that wasn't
-    /// already active. Files already covered by a session or an in-flight send are
-    /// dropped so we never start a second transfer (and second link) for them.
-    /// Returns an empty array when every file is already active — the caller
-    /// should then copy the existing link(s) instead of starting a new transfer.
-    func reserveForSending(_ urls: [URL]) -> [URL] {
-        let fresh = urls.filter { !isActive(path: $0.path) }
-        connectingPaths.formUnion(fresh.map(\.path))
-        return fresh
-    }
-
-    func releaseConnecting(_ urls: [URL]) {
-        connectingPaths.subtract(urls.map(\.path))
-    }
-
-    func addSession(roomID: String, files: [URL], task: Task<String, Error>, expiresAt: Date? = nil) {
-        connectingPaths.subtract(files.map(\.path))
-        let session = WarpDropSession(id: roomID, files: files, task: task, expiresAt: expiresAt)
-        sessions.append(session)
-        scheduleExpiry(roomID: roomID, expiresAt: expiresAt)
-        log.debug("WarpDrop room created: \(roomID), expires: \(expiresAt?.description ?? "never")")
-    }
-
     /// Change the expiration of a live session (from the active-link menu).
     func rescheduleExpiry(_ session: WarpDropSession, to expiration: TimeInterval) {
         guard let idx = sessions.firstIndex(where: { $0.id == session.id }) else { return }
         let newExpiry = expiration > 0 ? Date().addingTimeInterval(expiration) : nil
         sessions[idx].expiresAt = newExpiry
         scheduleExpiry(roomID: session.id, expiresAt: newExpiry)
-    }
-
-    func didCompleteDownload(roomID: String, count: Int) {
-        guard let idx = sessions.firstIndex(where: { $0.id == roomID }) else { return }
-        sessions[idx].downloadCount = count
-        log.debug("WarpDrop download #\(count) completed for room \(roomID)")
     }
 
     func stopSession(_ session: WarpDropSession) {
@@ -210,194 +166,29 @@ class WarpDropManager: ObservableObject {
 
 @MainActor let WDM = WarpDropManager.shared
 
-/// Resolve a requested expiration (nil → the default setting) into an absolute stop date,
-/// or nil when the value resolves to "never".
 @MainActor
-func resolveLinkExpiry(_ expiration: TimeInterval?) -> Date? {
-    let interval = expiration ?? Defaults[.defaultLinkExpiration]
-    return interval > 0 ? Date().addingTimeInterval(interval) : nil
+private func reportUnavailableSharing(_ optimiser: Optimiser) {
+    optimiser.warpDropConnecting = false
+    optimiser.overlayMessage = WARP_DROP_UNAVAILABLE_MESSAGE
+    log.error("\(WARP_DROP_UNAVAILABLE_MESSAGE, privacy: .public)")
 }
 
 @MainActor
-func warpDropSend(optimiser: Optimiser, expiration: TimeInterval? = nil) {
-    guard let url = optimiser.url else { return }
-    guard FileManager.default.fileExists(atPath: url.path) else {
-        optimiser.overlayMessage = "File not found"
-        return
-    }
-
-    // Already shared: copy the existing link instead of creating a second one.
-    if let session = WDM.session(forOptimiser: optimiser) {
-        session.copyLink()
-        optimiser.overlayMessage = "Copied link"
-        return
-    }
-    // Already connecting (room not created yet): don't start a second transfer.
-    // The link is copied to the pasteboard automatically once the room is ready.
-    guard WDM.reserveForSending([url]).isNotEmpty else { return }
-
-    optimiser.warpDropConnecting = true
-    warpDropSendFiles([url], overlayOptimisers: [optimiser], expiration: expiration)
+func warpDropSend(optimiser: Optimiser, expiration _: TimeInterval? = nil) {
+    reportUnavailableSharing(optimiser)
 }
 
 @MainActor
-func warpDropSend(optimisers: [Optimiser], expiration: TimeInterval? = nil) {
-    let urls = optimisers.compactMap { opt -> URL? in
-        guard let url = opt.url else { return nil }
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            opt.overlayMessage = "File not found"
-            return nil
-        }
-        return url
-    }
-    guard urls.isNotEmpty else { return }
-
-    // Only send files that aren't already shared or in flight, so re-pressing
-    // "Send files securely" on the same selection can't create duplicate links.
-    let fresh = WDM.reserveForSending(urls)
-    guard fresh.isNotEmpty else {
-        let links = optimisers.compactMap { WDM.session(forOptimiser: $0)?.shareURL }
-        if links.isNotEmpty {
-            withGeneralPasteboard { pb in
-                pb.clearContents()
-                pb.setString(links.joined(separator: "\n"), forType: .string)
-            }
-        }
-        return
-    }
-
-    let freshPaths = Set(fresh.map(\.path))
-    let freshOptimisers = optimisers.filter { freshPaths.contains($0.url?.path ?? "") }
-    for optimiser in freshOptimisers {
-        optimiser.warpDropConnecting = true
-    }
-    warpDropSendFiles(fresh, overlayOptimisers: freshOptimisers, expiration: expiration)
-}
-
-@MainActor
-private func warpDropSendFiles(_ files: [URL], overlayOptimisers: [Optimiser], expiration: TimeInterval? = nil) {
-    let expiresAt = resolveLinkExpiry(expiration)
-    let client = WarpDropClient()
-    let roomIDRef = Ref<String?>(nil)
-
-    let task = Task.detached { () -> String in
-        try await client.send(
-            files: files,
-            multi: true, // serve every receiver at once instead of one-at-a-time
-            maxReceivers: 20, // 0 = server default (256); old backends ignore multi and fall back to sequential
-            onRoomCreated: { [roomIDRef] roomID in
-                roomIDRef.value = roomID
-                Task { @MainActor in
-                    let shareURL = files.count == 1
-                        ? "https://drop.lowtechguys.com/d/\(roomID)"
-                        : "https://drop.lowtechguys.com/r/\(roomID)"
-                    withGeneralPasteboard { pb in
-                        pb.clearContents()
-                        pb.setString(shareURL, forType: .string)
-                    }
-
-                    for optimiser in overlayOptimisers {
-                        optimiser.warpDropConnecting = false
-                    }
-                    overlayOptimisers.first?.overlayMessage = "Copied link"
-                }
-            },
-            onDownloadCompleted: { [roomIDRef] count in
-                guard let roomID = roomIDRef.value else { return }
-                Task { @MainActor in
-                    WDM.didCompleteDownload(roomID: roomID, count: count)
-                }
-            }
-        )
-    }
-
-    Task {
-        defer {
-            for optimiser in overlayOptimisers {
-                optimiser.warpDropConnecting = false
-            }
-            // Clear the in-flight reservation if the room never got created
-            // (timeout/cancel). On success addSession already cleared it.
-            WDM.releaseConnecting(files)
-        }
-        for _ in 0 ..< 300 {
-            try? await Task.sleep(for: .milliseconds(100))
-            if let roomID = roomIDRef.value {
-                WDM.addSession(roomID: roomID, files: files, task: task, expiresAt: expiresAt)
-                return
-            }
-            if task.isCancelled { return }
-        }
+func warpDropSend(optimisers: [Optimiser], expiration _: TimeInterval? = nil) {
+    for optimiser in optimisers {
+        reportUnavailableSharing(optimiser)
     }
 }
 
-/// Send a single file securely and await the share link.
-/// Returns the share URL on success, nil on failure or timeout.
+/// Always fails explicitly while no independent provider is configured. In particular,
+/// this does not overwrite the clipboard with a fabricated or upstream service URL.
 @MainActor
-func warpDropSendAndWait(url: URL, optimiser: Optimiser, expiration: TimeInterval? = nil) async -> String? {
-    // Already shared: return the existing link instead of opening another room.
-    if let session = WDM.session(forPath: url.path) {
-        return session.shareURL
-    }
-    // Already connecting from another trigger: don't start a duplicate transfer.
-    guard WDM.reserveForSending([url]).isNotEmpty else {
-        return WDM.session(forPath: url.path)?.shareURL
-    }
-    defer { WDM.releaseConnecting([url]) }
-
-    let expiresAt = resolveLinkExpiry(expiration)
-    let client = WarpDropClient()
-    let roomIDRef = Ref<String?>(nil)
-
-    let task = Task.detached { () -> String in
-        try await client.send(
-            files: [url],
-            multi: true, // serve every receiver at once instead of one-at-a-time
-            maxReceivers: 20, // 0 = server default (256); old backends ignore multi and fall back to sequential
-            onRoomCreated: { [roomIDRef] roomID in
-                roomIDRef.value = roomID
-                Task { @MainActor in
-                    let shareURL = "https://drop.lowtechguys.com/d/\(roomID)"
-                    withGeneralPasteboard { pb in
-                        pb.clearContents()
-                        pb.setString(shareURL, forType: .string)
-                    }
-                    optimiser.overlayMessage = "Copied link"
-                }
-            },
-            onDownloadCompleted: { [roomIDRef] count in
-                guard let roomID = roomIDRef.value else { return }
-                Task { @MainActor in
-                    WDM.didCompleteDownload(roomID: roomID, count: count)
-                }
-            }
-        )
-    }
-
-    for _ in 0 ..< 300 {
-        try? await Task.sleep(for: .milliseconds(100))
-        if let roomID = roomIDRef.value {
-            WDM.addSession(roomID: roomID, files: [url], task: task, expiresAt: expiresAt)
-            return "https://drop.lowtechguys.com/d/\(roomID)"
-        }
-        if task.isCancelled { return nil }
-    }
-
+func warpDropSendAndWait(url _: URL, optimiser: Optimiser, expiration _: TimeInterval? = nil) async -> String? {
+    reportUnavailableSharing(optimiser)
     return nil
-}
-
-/// Thread-safe mutable reference for sharing values across sendable closures.
-final class Ref<T>: @unchecked Sendable {
-    init(_ value: T) {
-        _value = value
-    }
-
-    var value: T {
-        get { lock.lock(); defer { lock.unlock() }; return _value }
-        set { lock.lock(); defer { lock.unlock() }; _value = newValue }
-    }
-
-    private let lock = NSLock()
-    private var _value: T
-
 }

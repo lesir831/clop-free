@@ -1255,11 +1255,15 @@ final class PipelineExecution {
         try? currentFile.setOptimisationStatusXattr("true")
     }
 
-    func handleCopyLinkForSending(expiration: TimeInterval? = nil) async {
-        let url = currentFile.url
-        if let shareURL = await warpDropSendAndWait(url: url, optimiser: optimiser, expiration: expiration) {
-            log.debug("Pipeline: send link copied: \(shareURL)")
+    func handleCopyLinkForSending(expiration: TimeInterval? = nil) async throws {
+        guard WARP_DROP_AVAILABLE else {
+            throw ClopError.pipelineStepFailed(WARP_DROP_UNAVAILABLE_MESSAGE)
         }
+        let url = currentFile.url
+        guard let shareURL = await warpDropSendAndWait(url: url, optimiser: optimiser, expiration: expiration) else {
+            throw ClopError.pipelineStepFailed("Could not create a secure send link. No link was copied.")
+        }
+        log.debug("Pipeline: send link copied: \(shareURL)")
     }
 
     // MARK: - Fork

@@ -1,7 +1,6 @@
 import Defaults
 import Foundation
 import Lowtech
-import LowtechPro
 import os
 import SwiftUI
 import System
@@ -25,7 +24,6 @@ struct CompactResult: View {
     var onToggleSelection: () -> Void = {}
     @State var hovering = false
 
-    @Default(.neverShowProError) var neverShowProError
     @Default(.showCompactImages) var showCompactImages
 
     @Environment(\.openWindow) var openWindow
@@ -211,7 +209,6 @@ struct CompactResult: View {
     }
 
     @ViewBuilder var errorView: some View {
-        let proError = optimiser.id == Optimiser.IDs.pro
         if let error = optimiser.error {
             VStack(alignment: .leading, spacing: 4) {
                 Text(error)
@@ -226,24 +223,6 @@ struct CompactResult: View {
                         .multilineTextAlignment(.leading)
                 }
 
-                if proError {
-                    HStack {
-                        Button("Get Clop Pro") {
-                            manageLicenceInSettings()
-                        }
-                        .buttonStyle(FlatButton(color: .inverted, textColor: .mauvish, radius: 5, verticalPadding: 2))
-                        .font(.round(10, weight: .heavy))
-                        .colorMultiply(.mauvish.blended(withFraction: 0.8, of: .white))
-                        Spacer()
-                        Button("Never show this again") {
-                            neverShowProError = true
-                            hoveredOptimiserID = nil
-                            optimiser.remove(after: 200, withAnimation: true)
-                        }
-                        .buttonStyle(FlatButton(color: .inverted.opacity(0.8), textColor: .secondary, radius: 5, verticalPadding: 2))
-                        .font(.round(10, weight: .semibold))
-                    }
-                }
                 pathView
             }
             .allowsTightening(true)
@@ -1379,10 +1358,6 @@ struct CompactPreview: View {
         clipEnd.thumbnail = NSImage(resource: .previewImageThumb)
         clipEnd.finish(oldBytes: 750_190, newBytes: 211_932, oldSize: NSSize(width: 1880, height: 1000), newSize: NSSize(width: 1200, height: 600))
 
-        let proErrorOpt = Optimiser(id: Optimiser.IDs.pro, type: .unknown)
-        proErrorOpt.isPreview = true
-        proErrorOpt.finish(error: "You've optimised 5 files this session", notice: "Get Clop Pro to remove the limit and unlock all features.\nRelaunch the app to reset the counter.")
-
         let noticeOpt = Optimiser(id: "notice", type: .unknown, operation: "")
         noticeOpt.finish(notice: "**Paused**\nNext clipboard event will be ignored")
 
@@ -1397,7 +1372,6 @@ struct CompactPreview: View {
         o.optimisers = [
             clipEnd,
             videoOpt,
-//            proErrorOpt,
             gifOpt,
             errorOpt,
             pngIndeterminate,
@@ -1486,10 +1460,10 @@ struct CompactResult_Previews: PreviewProvider {
 struct CompactPreviewAllStates: View {
     static var om: OptimisationManager = {
         let o = CompactPreview.om
-        let proErrorOpt = Optimiser(id: Optimiser.IDs.pro, type: .unknown)
-        proErrorOpt.isPreview = true
-        proErrorOpt.finish(error: "You've optimised 5 files this session", notice: "Get Clop Pro to remove the limit and unlock all features.\nRelaunch the app to reset the counter.")
-        o.optimisers.insert(proErrorOpt)
+        let unreadableFile = Optimiser(id: "unreadable-file", type: .unknown)
+        unreadableFile.isPreview = true
+        unreadableFile.finish(error: "The file could not be read", notice: "Check that the file exists and that Clop Free has permission to access it.")
+        o.optimisers.insert(unreadableFile)
         mainActor {
             o.failedCount += 1
             o.visibleCount += 1

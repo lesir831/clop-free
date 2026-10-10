@@ -563,7 +563,7 @@ extension MCPServer {
 
 extension MCPServer {
     static let gate = "Refused until the user allows agent changes in Clop Settings, MCP, and the whole MCP "
-        + "server needs Clop Pro. Clop's own words come back verbatim when it refuses."
+        + "server requires the user's permission for changes. Clop's own words come back verbatim when it refuses."
 
     static let tools: [MCPTool] = [
         // --- the switch
@@ -572,8 +572,8 @@ extension MCPServer {
             description: "Ask the user to allow changes through MCP, launching Clop if it is not running. "
                 + "Clop puts an alert on screen and this waits for the answer, so call it once, in "
                 + "response to something the user asked for, and tell them to expect it. Clop refuses "
-                + "every mutating tool until they allow it; reading works either way once they have "
-                + "Clop Pro, and the choice sticks across launches until it is stopped.",
+                + "every mutating tool until they allow it; reading works either way. "
+                + "The choice sticks across launches until it is stopped.",
             inputSchema: ["type": "object", "properties": [String: Any]()],
             handler: { _ in try startServer() }
         ),
@@ -585,7 +585,7 @@ extension MCPServer {
         ),
         MCPTool(
             name: "clop_status",
-            description: "Clop's version, whether the user has Clop Pro, whether agent changes are allowed, "
+            description: "Clop's version, whether agent changes are allowed, "
                 + "whether script steps are allowed, and where the server lives. Read this first when "
                 + "a tool has been refused.",
             inputSchema: ["type": "object", "properties": [String: Any]()],

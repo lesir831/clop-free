@@ -1,10 +1,9 @@
 import AppKit
 import Defaults
 import Foundation
-import LowtechPro
 import os
 
-private let mcpLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lowtechguys.Clop", category: "MCP")
+private let mcpLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.clop-free.Clop", category: "MCP")
 
 // MARK: - MCPInstaller
 
@@ -27,7 +26,7 @@ enum MCPInstaller {
         }
     }
 
-    static let serverName = "clop"
+    static let serverName = "clop-free"
 
     /// The arguments that turn the CLI into the server.
     static let serveArgs = ["mcp", "serve"]
@@ -39,14 +38,14 @@ enum MCPInstaller {
     ///
     /// It used to be a bundled script that needed an interpreter found at launch, and on a Mac with
     /// no Command Line Tools and no Homebrew the server did not run at all. The CLI is already
-    /// signed, notarised and inside the app's seal.
+    /// signed with the app according to the chosen build mode.
     static var cliPath: String {
         let bundled = Bundle.main.bundleURL
             .appendingPathComponent("Contents/SharedSupport/ClopCLI").path
         if FileManager.default.isExecutableFile(atPath: bundled) {
             return bundled
         }
-        return ("~/.local/bin/clop" as NSString).expandingTildeInPath
+        return ("~/.local/bin/clop-free" as NSString).expandingTildeInPath
     }
 
     /// Whether the server can actually run. Installing without it writes a config entry that looks
@@ -57,35 +56,28 @@ enum MCPInstaller {
 
     /// The one-liner for a client that is driven from a terminal.
     static var cliCommand: String {
-        "claude mcp add --scope user clop -- \(cliPath) \(serveArgs.joined(separator: " "))"
+        "claude mcp add --scope user clop-free -- \(mcpShellQuotedArgument(cliPath)) \(serveArgs.joined(separator: " "))"
     }
 
     static var cardURL: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".well-known/mcp/clop.json")
+            .appendingPathComponent(".well-known/mcp/clop-free.json")
     }
 
     static var supportDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Application Support/Clop", isDirectory: true)
+            .appendingPathComponent("Library/Application Support/Clop Free", isDirectory: true)
     }
 
     // MARK: - The switch
 
     @MainActor static func setEnabled(_ enabled: Bool) {
-        // Pro only, and unlike the optimisation counters this is a wall rather than a nag: there is no
-        // free MCP mode. Turning it off never needs a licence, so a lapsed licence can still be
-        // switched off rather than being stuck on.
-        guard !enabled || proactive else {
-            mcpLog.info("MCP enable refused, no Pro licence")
-            return
-        }
         Defaults[.mcpEnabled] = enabled
         writeServerCard()
         mcpLog.info("MCP \(enabled ? "enabled" : "disabled", privacy: .public)")
     }
 
-    /// Handles `clop://mcp/start` and `clop://mcp/stop`. Returns false for a URL that is not ours, so
+    /// Handles `clop-free://mcp/start` and `clop-free://mcp/stop`. Returns false for a URL that is not ours, so
     /// the caller can keep handling it.
     ///
     /// Start ASKS. The URL is what an agent opens when a tool of its own was refused, so nothing but
@@ -93,14 +85,10 @@ enum MCPInstaller {
     /// behind someone who just turned it off would make every line of copy about this a lie. Stop
     /// needs no alert: it only ever takes permission away.
     @MainActor static func handle(url: URL) -> Bool {
-        guard url.scheme == "clop", url.host == "mcp" else { return false }
+        guard url.scheme == "clop-free", url.host == "mcp" else { return false }
         switch url.lastPathComponent {
         case "start":
             guard !Defaults[.mcpEnabled] else { return true }
-            guard proactive else {
-                showProRequired()
-                return true
-            }
             if askToEnable() {
                 setEnabled(true)
             }
@@ -119,28 +107,25 @@ enum MCPInstaller {
     /// carries no credentials: Clop's transport is a Mach port that any process of this user can
     /// already open.
     ///
-    /// Nothing here may suggest relaunching Clop. MCP is Pro so restarting buys an agent nothing on
-    /// this path, but the same words would teach the trick for the CLI and Shortcuts paths, whose free
-    /// counters do reset on relaunch by design.
     @MainActor static func writeServerCard() {
         let card: [String: Any] = [
             "name": serverName,
-            "displayName": "Clop",
+            "displayName": "Clop Free",
             "description": "Image, video, PDF and audio optimisation. Run pipelines over files, downscale, convert, crop, author new pipelines, and read or change any Clop setting.",
             "version": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?",
-            "app": ["bundleID": "com.lowtechguys.Clop", "path": Bundle.main.bundlePath],
+            "app": ["bundleID": "com.clop-free.Clop", "path": Bundle.main.bundlePath],
             "enabled": Defaults[.mcpEnabled],
-            "requiresPro": true,
-            "pro": proactive,
+            "requiresPro": false,
+            "edition": "free",
             "transport": [
                 "type": "stdio",
                 "command": cliPath,
                 "args": serveArgs,
             ],
             "control": [
-                "start": "open clop://mcp/start",
-                "stop": "open clop://mcp/stop",
-                "note": "Clop's MCP server needs Clop Pro. With a licence, reading works whether or not it is started; changes are refused until it is. Starting sticks across launches until it is stopped.",
+                "start": "open clop-free://mcp/start",
+                "stop": "open clop-free://mcp/stop",
+                "note": "Reading works whether or not MCP is started; changes are refused until the user enables it. Starting sticks across launches until it is stopped.",
             ],
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: card, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]) else { return }
@@ -198,17 +183,9 @@ enum MCPInstaller {
         NSApp.activate(ignoringOtherApps: true)
         return alert.runModal() == .alertFirstButtonReturn
     }
+}
 
-    @MainActor private static func showProRequired() {
-        let alert = NSAlert()
-        alert.messageText = "MCP needs Clop Pro"
-        alert.informativeText = "An agent asked for access to controlling Clop through MCP. That is a Pro feature."
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Manage Licence")
-        alert.addButton(withTitle: "Not now")
-        NSApp.activate(ignoringOtherApps: true)
-        if alert.runModal() == .alertFirstButtonReturn {
-            manageLicenceInSettings()
-        }
-    }
+/// Quote one argument for a POSIX shell, including app names with spaces or apostrophes.
+func mcpShellQuotedArgument(_ value: String) -> String {
+    "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
 }

@@ -107,7 +107,7 @@ extension Defaults.Keys {
     static let useBatchModeForFolders = Key<Bool>("useBatchModeForFolders", default: true)
     static let batchModeFileCountThreshold = Key<Int>("batchModeFileCountThreshold", default: 30)
 
-    static let workdir = Key<String>("workdir", default: URL.cachesDirectory.appendingPathComponent("Clop", conformingTo: .directory).path)
+    static let workdir = Key<String>("workdir", default: URL.cachesDirectory.appendingPathComponent("Clop Free", conformingTo: .directory).path)
     static let workdirCleanupInterval = Key<CleanupInterval>("workdirCleanupInterval", default: .every3Days)
 
     static let formatsToConvertToJPEG = Key<Set<UTType>>("formatsToConvertToJPEG", default: [UTType.webP, UTType.avif, UTType.heic, UTType.bmp].compactMap { $0 }.set)
@@ -243,7 +243,7 @@ extension Defaults.Keys {
     static let floatingResultActions = Key<[FloatingAction]>("floatingResultActions", default: FloatingAction.defaultFloating)
     static let compactResultActions = Key<[FloatingAction]>("compactResultActions", default: FloatingAction.defaultCompact)
     static let formatPickerStyle = Key<FormatPickerStyle>("formatPickerStyle", default: .bar)
-    /// Whether agents may change things through the MCP server. Reading is allowed with a Pro licence
+    /// Whether agents may change things through the MCP server. Reading remains available
     /// either way; this is the switch for everything that writes. Sticks across launches, see
     /// `MCPInstaller`.
     static let mcpEnabled = Key<Bool>("mcpEnabled", default: false)
@@ -263,7 +263,6 @@ extension Defaults.Keys {
     static let autoClearAllCompactResultsAfter = Key<Int>("autoClearAllCompactResultsAfter", default: 120)
     static let floatingResultsCorner = Key<ScreenCorner>("floatingResultsCorner", default: .bottomRight)
     static let followCursorScreen = Key<Bool>("followCursorScreen", default: true)
-    static let neverShowProError = Key<Bool>("neverShowProError", default: false)
 
     static let dismissFloatingResultOnDrop = Key<Bool>("dismissFloatingResultOnDrop", default: true)
     static let dismissFloatingResultOnUpload = Key<Bool>("dismissFloatingResultOnUpload", default: true)
@@ -281,7 +280,7 @@ extension Defaults.Keys {
     static let pauseAutomaticOptimisations = Key<Bool>("pauseAutomaticOptimisations", default: false)
     static let presetZones = Key<[PresetZone]>("presetZones", default: [])
 
-    static let syncSettingsCloud = Key<Bool>("syncSettingsCloud", default: true)
+    static let syncSettingsCloud = Key<Bool>("syncSettingsCloud", default: false)
     static let allowClopToAppearInScreenshots = Key<Bool>("allowClopToAppearInScreenshots", default: false)
 }
 

@@ -1275,13 +1275,13 @@ private func batchPDFDPIArgs(_ mode: PDFDPIMode, aggressive: Bool?) -> (dpi: Int
 // MARK: - CLI bridge
 
 /// Whether a CLI/IPC request should be handled by the batch engine + window instead of the per-file
-/// path: a Pro-only, non-pipeline request with more files than the configured threshold.
+/// path: a non-pipeline request with more files than the configured threshold.
 @MainActor func shouldRouteToBatch(_ req: OptimisationRequest) -> Bool {
     // Only route requests the batch engine can fully express. Batch placement knows "in place"
     // or "to folder" but not per-file output templates, so those keep the per-file path:
     // dropping a requested operation silently is worse than skipping the batch window.
     let outputExpressible = req.output == nil || req.output?.existingFilePath?.isDir == true
-    return req.pipeline == nil && outputExpressible && proactive && req.urls.count > Defaults[.batchModeFileCountThreshold]
+    return req.pipeline == nil && outputExpressible && req.urls.count > Defaults[.batchModeFileCountThreshold]
 }
 
 /// The CLI batch that ran last, which the next one waits for.

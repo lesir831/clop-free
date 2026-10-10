@@ -32,7 +32,7 @@ extension URL {
 }
 
 extension UserDefaults {
-    static let app: UserDefaults? = .init(suiteName: "com.lowtechguys.Clop")
+    static let app: UserDefaults? = .init(suiteName: "com.clop-free.Clop")
 }
 
 extension FileBehaviour: ExpressibleByArgument {
@@ -58,7 +58,9 @@ let SIZE_REGEX = #/(\d+)\s*[xX×]\s*(\d+)/#
 let RATIO_REGEX = #/(\d+)[.,]?(\d*)\s*:\s*(\d+)[.,]?(\d*)/#
 let CLOP_APP: URL = {
     let u = Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
-    return u.pathExtension == "app" ? u : URL(fileURLWithPath: "/Applications/Clop.app")
+    if u.pathExtension == "app" { return u }
+    return NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.clop-free.Clop")
+        ?? URL(fileURLWithPath: "/Applications/Clop Free.app")
 }()
 
 var currentRequestIDs: [String] = []
@@ -88,7 +90,7 @@ func ensureAppIsRunning() {
 /// script step and attach it to a watched folder, and every file dropped there would run it.
 ///
 /// The app decides, the same as for files: Pro, the MCP switch and script steps. Reading the switch
-/// from the defaults suite here once missed Pro, so a lapsed licence left the switch on and kept these
+/// from the defaults suite here once missed the app-side permission check and kept these
 /// working, and `pipeline preset` never checked at all.
 ///
 /// This is a check inside the caller's own binary, so it is not a sandbox: an agent that never sets
@@ -737,14 +739,13 @@ func convertPipelineDSL(to format: String, output: String?) -> String {
 }
 
 /// Resolve a bundled binary installed by the Clop app. The standalone CLI resolves
-/// `applicationScriptsDirectory` to its own bundle id (com.lowtechguys.Clop.CLI), which
+/// `applicationScriptsDirectory` to its own bundle id (com.clop-free.Clop.CLI), which
 /// may not have the bin symlink yet (e.g. before the app has run), so fall back to the
 /// app's known Application Scripts locations.
 func resolveBundledBinary(_ name: String) -> String? {
     let candidates = [
         BIN_DIR.appendingPathComponent(name).path,
-        "\(NSHomeDirectory())/Library/Application Scripts/com.lowtechguys.Clop/bin/\(ARCH)/\(name)",
-        "\(NSHomeDirectory())/Library/Application Scripts/com.lowtechguys.Clop-setapp/bin/\(ARCH)/\(name)",
+        "\(NSHomeDirectory())/Library/Application Scripts/com.clop-free.Clop/bin/\(ARCH)/\(name)",
     ]
     return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
 }
@@ -2784,15 +2785,15 @@ struct Clop: ParsableCommand {
                 let enabled = defaults?.bool(forKey: "mcpEnabled") ?? false
                 let scripts = defaults?.bool(forKey: "mcpAllowScriptSteps") ?? false
 
-                let cardPath = ("~/Library/Application Support/Clop/mcp.json" as NSString).expandingTildeInPath
+                let cardPath = ("~/Library/Application Support/Clop Free/mcp.json" as NSString).expandingTildeInPath
                 let card = (try? Data(contentsOf: URL(fileURLWithPath: cardPath)))
                     .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? [:]
 
                 var status: [String: Any] = [
                     "enabled": enabled,
                     "allowScriptSteps": scripts,
-                    "pro": card["pro"] as? Bool ?? false,
-                    "requiresPro": true,
+                    "edition": "free",
+                    "requiresPro": false,
                     "cardPath": cardPath,
                 ]
                 if let version = card["version"] as? String {
@@ -2810,12 +2811,12 @@ struct Clop: ParsableCommand {
                 guard json else {
                     print("MCP changes:     \(enabled ? "allowed" : "not allowed")")
                     print("Script steps:    \(scripts ? "allowed" : "not allowed")")
-                    print("Clop Pro:        \(status["pro"] as? Bool == true ? "yes" : "no")")
+                    print("Edition:         Clop Free")
                     if let path = status["appPath"] as? String {
                         print("App:             \(path)")
                     }
                     if !enabled {
-                        print("\nAsk the user to allow it in Clop Settings, MCP, or run: open clop://mcp/start")
+                        print("\nAsk the user to allow it in Clop Settings, MCP, or run: open clop-free://mcp/start")
                     }
                     return
                 }
@@ -2889,7 +2890,8 @@ struct Clop: ParsableCommand {
     }
 
     static let configuration = CommandConfiguration(
-        abstract: "Clop: optimise, crop and downscale images, videos, audio files and PDFs",
+        commandName: "clop-free",
+        abstract: "Clop Free: optimise, crop and downscale images, videos, audio files and PDFs",
         subcommands: [
             Optimise.self,
             Crop.self,
@@ -2945,7 +2947,7 @@ func runInForeground(_ argv: [String]) throws -> Int32 {
 /// Spelled out rather than derived from `LOG_SUBSYSTEM`, which is only the running binary's own id:
 /// the CLI has to reach the app's subsystem and the Setapp build's too, and `log config` matches one
 /// exact subsystem, never a prefix.
-let CLOP_LOG_SUBSYSTEMS = ["com.lowtechguys.Clop", "com.lowtechguys.Clop-setapp", "com.lowtechguys.Clop.CLI"]
+let CLOP_LOG_SUBSYSTEMS = ["com.clop-free.Clop", "com.clop-free.Clop.CLI"]
 
 /// Shared by `clop logs persist` and the `clop_debug_logs` MCP tool, which differ only in how they
 /// get root: sudo in a terminal, an administrator dialog when there is no terminal.
@@ -2957,7 +2959,7 @@ enum LogPersistAction: String, CaseIterable, ExpressibleByArgument {
         switch self {
         case .on: """
             Debug logs for Clop are kept now. Read them with:
-                log show --debug --info --last 1h --predicate 'subsystem BEGINSWITH "com.lowtechguys.Clop"'
+                log show --debug --info --last 1h --predicate 'subsystem BEGINSWITH "com.clop-free.Clop"'
             """
         case .off: "Debug logs for Clop are back to the macOS default"
         case .status: nil

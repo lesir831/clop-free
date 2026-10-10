@@ -14,8 +14,8 @@ struct InstallCLIError: Error {
 let CLOP_CLI_BIN = "\(Bundle.main.sharedSupportPath!)/ClopCLI"
 let CLI_BIN_DIR = "\(HOME)/.local/bin"
 let CLI_BIN_DIR_ENV = "$HOME/.local/bin"
-let CLOP_CLI_BIN_LINK = "\(CLI_BIN_DIR)/clop"
-let CLOP_CLI_BIN_SHELL = "~/.local/bin/clop"
+let CLOP_CLI_BIN_LINK = "\(CLI_BIN_DIR)/clop-free"
+let CLOP_CLI_BIN_SHELL = "~/.local/bin/clop-free"
 let ZSHRC = "\(HOME)/.zshrc"
 let BASHRC = "\(HOME)/.bashrc"
 let FISHRC = "\(HOME)/.config/fish/config.fish"
@@ -73,7 +73,7 @@ func installCLIBinary() throws {
     Defaults[.cliInstalled] = true
 }
 
-/// Whether the `clop` CLI symlink exists and points at this bundle's CLI binary.
+/// Whether the `clop-free` CLI symlink exists and points at this bundle's CLI binary.
 /// A stale link (the app was moved or updated to a new path) or a broken link reads
 /// as not installed, so the UI can offer a reinstall that repairs it.
 func cliSymlinkValid() -> Bool {
@@ -108,7 +108,7 @@ func handleCLIInstall() {
             do {
                 try exec(arg0: shell, args: ["-l"])
             } catch {
-                print("Restart your shell and type `clop --help` to use it")
+                print("Restart your shell and type `clop-free --help` to use it")
             }
         }
     } catch let error as InstallCLIError {

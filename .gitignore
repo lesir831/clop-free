@@ -5,17 +5,17 @@ Clop/bin.zip
 *.delta
 *.bkp
 Releases/*.html
-required.swift
 Releases/old_updates/
 *.tmp
 build/
-test/
 
-# Tests, fixtures, corpuses and dev/AI specs — keep private, never publish
-ClopTests/
-docs/superpowers/
-docs/specs/
-*.corpus.json
-
-# subagent-driven-development scratch workspace
-.superpowers/
+# Local build products and signing material
+DerivedData/
+.build/
+__pycache__/
+*.pyc
+*.p12
+*.p8
+*.mobileprovision
+.env
+.DS_Store

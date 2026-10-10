@@ -2,39 +2,27 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Swift Build",
+            "label": "Clop Free: Build",
             "type": "shell",
-            "command": "swift build",
+            "command": "make",
+            "args": [
+                "build"
+            ],
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true
             },
-            "presentation": {
-                "reveal": "always"
-            }
+            "problemMatcher": "$swiftc"
         },
         {
-            "label": "Swift: Run File",
+            "label": "Clop Free: Check",
             "type": "shell",
-            "command": "swift ${file}",
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "presentation": {
-                "reveal": "always"
-            },
-            "problemMatcher": "$swiftc",
-        },
-        {
-            "label": "Xcode: Build & Run",
-            "type": "shell",
-            "command": "osascript -e 'tell application \"Xcode\" to run the first workspace document'",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "shared"
-            }
+            "command": "make",
+            "args": [
+                "check"
+            ],
+            "group": "test",
+            "problemMatcher": []
         }
     ]
 }

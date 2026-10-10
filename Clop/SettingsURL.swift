@@ -1,16 +1,16 @@
 import Foundation
 
-/// `clop://settings/<tab>[/<row>]` (or `?highlight=<row>`) opens Settings on a tab and flashes one
+/// `clop-free://settings/<tab>[/<row>]` (or `?highlight=<row>`) opens Settings on a tab and flashes one
 /// row. The row id is the row's search anchor, which is also its accessibility identifier, so an
 /// agent that read one off the window can come straight back to it.
 ///
 /// A row the search index knows opens on the tab the index puts it in, whatever tab the URL names,
-/// so a copied link survives the row moving to another pane. `clop://settings/<row>` works too.
+/// so a copied link survives the row moving to another pane. `clop-free://settings/<row>` works too.
 enum SettingsURL {
     /// True when the URL was ours, resolved or not: a claimed URL must never reach the file
     /// optimiser, which would try to fetch it.
     @MainActor static func handle(url: URL) -> Bool {
-        guard url.scheme == "clop", url.host == "settings" else { return false }
+        guard url.scheme == "clop-free", url.host == "settings" else { return false }
 
         let parts = url.pathComponents.filter { $0 != "/" }
         let namedTab = parts.first.flatMap { tab(named: $0) }
@@ -32,10 +32,10 @@ enum SettingsURL {
     /// pane on a Clop from before rows were looked up.
     static func link(to entry: SettingEntry) -> String {
         var components = URLComponents()
-        components.scheme = "clop"
+        components.scheme = "clop-free"
         components.host = "settings"
         components.path = "/\(entry.tab)/\(entry.id)"
-        return components.string ?? "clop://settings/\(entry.tab)/\(entry.id)"
+        return components.string ?? "clop-free://settings/\(entry.tab)/\(entry.id)"
     }
 
     /// A tab by its case name ("presetZones") or its title ("Preset zones"), in any case, spaces and

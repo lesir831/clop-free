@@ -114,7 +114,7 @@ enum FloatingAction: RawRepresentable, CaseIterable, Codable, Hashable, Defaults
         case .quickLook: "QuickLook"
         case .saveAs: "Save as..."
         case .addToShelf: "Add to shelf"
-        case .sendSecurely: "Send securely"
+        case .sendSecurely: WARP_DROP_AVAILABLE ? "Send securely" : "Send securely (unavailable)"
         case .targetSize: "Fit under size"
         }
     }
@@ -2714,6 +2714,8 @@ struct WarpDropActiveButton: View {
                 .shadow(color: .red.opacity(glowing ? 0.5 : 0), radius: glowing ? 4 : 0)
         }
         .accessibilityLabel("Secure send link")
+        .disabled(!WARP_DROP_AVAILABLE)
+        .help(WARP_DROP_AVAILABLE ? "Manage the secure send link" : WARP_DROP_UNAVAILABLE_MESSAGE)
         .menuButtonStyle(BorderlessButtonMenuButtonStyle())
         .onAppear { withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) { glowing = true } }
         .onDisappear { glowing = false }
@@ -2743,7 +2745,7 @@ struct SendSecurelyStartButton: View {
 
     var body: some View {
         Button(action: {
-            guard !preview else { return }
+            guard !preview, WARP_DROP_AVAILABLE else { return }
             optimiser.sendExpiration = Defaults[.defaultLinkExpiration]
             if inFloatingCard {
                 optimiser.showSendExpiration = true
@@ -2754,6 +2756,8 @@ struct SendSecurelyStartButton: View {
             SwiftUI.Image(systemName: "paperplane.fill").font(.heavy(9))
         }
         .contentShape(Rectangle())
+        .disabled(!WARP_DROP_AVAILABLE)
+        .help(WARP_DROP_AVAILABLE ? "Create a secure send link" : WARP_DROP_UNAVAILABLE_MESSAGE)
         .popover(isPresented: $showPopover, arrowEdge: .bottom) {
             SendExpirationPopover(optimiser: optimiser) { showPopover = false }
         }
@@ -2778,7 +2782,7 @@ struct SendExpirationPopover: View {
                 .accessibilityLabel("Link expiration")
                 .accessibilityValue(expirationDurationLabel(optimiser.sendExpiration))
             Button(action: {
-                guard !preview else { return }
+                guard !preview, WARP_DROP_AVAILABLE else { return }
                 warpDropSend(optimiser: optimiser, expiration: optimiser.sendExpiration)
                 onSend()
             }) {
@@ -2787,6 +2791,8 @@ struct SendExpirationPopover: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .disabled(!WARP_DROP_AVAILABLE)
+            .help(WARP_DROP_AVAILABLE ? "Create and copy the send link" : WARP_DROP_UNAVAILABLE_MESSAGE)
         }
         .padding(12)
         .frame(width: 240)
@@ -2821,7 +2827,7 @@ struct SendExpirationConfirmButton: View {
 
     var body: some View {
         Button(action: {
-            guard !preview else { return }
+            guard !preview, WARP_DROP_AVAILABLE else { return }
             optimiser.showSendExpiration = false
             warpDropSend(optimiser: optimiser, expiration: optimiser.sendExpiration)
         }) {
@@ -2836,6 +2842,8 @@ struct SendExpirationConfirmButton: View {
                 .contentShape(Capsule(style: .continuous))
         }
         .buttonStyle(.plain)
+        .disabled(!WARP_DROP_AVAILABLE)
+        .help(WARP_DROP_AVAILABLE ? "Create and copy the send link" : WARP_DROP_UNAVAILABLE_MESSAGE)
     }
 }
 
@@ -3064,7 +3072,9 @@ struct ActionButton: View {
             }
             .contentShape(Rectangle())
         case .sendSecurely:
-            if optimiser.warpDropConnecting {
+            if !WARP_DROP_AVAILABLE {
+                SendSecurelyStartButton(optimiser: optimiser, inFloatingCard: inFloatingCard)
+            } else if optimiser.warpDropConnecting {
                 ProgressView()
                     .controlSize(.mini)
                     .scaleEffect(0.6)

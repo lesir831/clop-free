@@ -217,6 +217,8 @@ struct RightClickMenuView: View {
                     Button("Send file securely") {
                         warpDropSend(optimiser: optimiser)
                     }
+                    .disabled(!WARP_DROP_AVAILABLE)
+                    .help(WARP_DROP_UNAVAILABLE_MESSAGE)
                     .keyboardShortcut("w")
                 }
                 if let url = optimiser.url ?? optimiser.originalURL, let airdrop = NSSharingService(named: .sendViaAirDrop) {
@@ -533,6 +535,8 @@ struct BatchRightClickMenuView: View {
                 warpDropSend(optimisers: sm.optimisers)
                 sm.selection = []
             }
+            .disabled(!WARP_DROP_AVAILABLE)
+            .help(WARP_DROP_UNAVAILABLE_MESSAGE)
         }
         Button("Upload with Dropshare") {
             DROPSHARE.open(optimisers: sm.optimisers)

@@ -180,10 +180,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>CFBundleURLName</key>
-			<string>com.lowtechguys.Clop</string>
+			<string>com.clop-free.Clop</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>clop</string>
+				<string>clop-free</string>
 			</array>
 		</dict>
 	</array>
@@ -225,9 +225,9 @@
 		<true/>
 	</dict>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Clop needs access to your Photos library to retrieve full-resolution images copied from Photos.app</string>
+	<string>Clop Free needs access to your Photos library to retrieve full-resolution images copied from Photos.app</string>
 	<key>NSPrincipalClass</key>
-	<string>SentryCrashExceptionApplication</string>
+	<string>NSApplication</string>
 	<key>NSServices</key>
 	<array>
 		<dict>
@@ -276,7 +276,7 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Optimise with Clop</string>
+				<string>Optimise with Clop Free</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>optimisationService</string>
@@ -310,7 +310,7 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Optimise with Clop</string>
+				<string>Optimise with Clop Free</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>optimisationService</string>
@@ -350,28 +350,9 @@
 			</array>
 		</dict>
 	</array>
-	<key>OSLogPreferences</key>
-	<dict>
-		<key>com.lowtechguys.Clop</key>
-		<dict>
-			<key>DEFAULT-OPTIONS</key>
-			<dict>
-				<key>Enable-Private-Data</key>
-				<true/>
-			</dict>
-		</dict>
-		<key>com.lowtechguys.Clop-setapp</key>
-		<dict>
-			<key>DEFAULT-OPTIONS</key>
-			<dict>
-				<key>Enable-Private-Data</key>
-				<true/>
-			</dict>
-		</dict>
-	</dict>
-	<key>SUFeedURL</key>
-	<string>https://files.lowtechguys.com/clop/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>lqnO6tg2A9evTIFo2SC9ArZ6NS84gtBshcAWdwh12xQ=</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Clop Free uses automation to send files to sharing apps and run your selected workflows.</string>
+	<key>ClopFreeICloudEnabled</key>
+	<false/>
 </dict>
 </plist>

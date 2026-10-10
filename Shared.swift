@@ -76,7 +76,6 @@ enum ClopError: Error, CustomStringConvertible, Codable {
     case optimisationPaused(FilePath)
     case optimisationFailed(String)
     case conversionFailed(FilePath)
-    case proError(String)
     case decompressingBinariesError
     case downscaleFailed(FilePath)
     case appNotRunning(FilePath)
@@ -129,8 +128,6 @@ enum ClopError: Error, CustomStringConvertible, Codable {
             return "Optimisation paused: \(p)"
         case let .conversionFailed(p):
             return "Conversion failed: \(p)"
-        case let .proError(string):
-            return "Pro error: \(string)"
         case .decompressingBinariesError:
             return "Decompressing binaries"
         case let .downscaleFailed(p):
@@ -189,8 +186,6 @@ enum ClopError: Error, CustomStringConvertible, Codable {
             "Optimisation paused"
         case .conversionFailed:
             "Conversion failed"
-        case .proError:
-            "Pro error"
         case .downscaleFailed:
             "Downscale failed"
         case .optimisationFailed:
@@ -265,11 +260,11 @@ func awaitSync(_ action: @escaping () async -> Void) {
     sem.wait()
 }
 
-let OPTIMISATION_PORT_ID = "com.lowtechguys.Clop.optimisationService"
-let OPTIMISATION_STOP_PORT_ID = "com.lowtechguys.Clop.optimisationServiceStop"
-let OPTIMISATION_RESPONSE_PORT_ID = "com.lowtechguys.Clop.optimisationServiceResponse"
-let OPTIMISATION_CLI_RESPONSE_PORT_ID = "com.lowtechguys.Clop.optimisationServiceResponseCLI"
-let SETTINGS_PORT_ID = "com.lowtechguys.Clop.settingsService"
+let OPTIMISATION_PORT_ID = "com.clop-free.Clop.optimisationService"
+let OPTIMISATION_STOP_PORT_ID = "com.clop-free.Clop.optimisationServiceStop"
+let OPTIMISATION_RESPONSE_PORT_ID = "com.clop-free.Clop.optimisationServiceResponse"
+let OPTIMISATION_CLI_RESPONSE_PORT_ID = "com.clop-free.Clop.optimisationServiceResponseCLI"
+let SETTINGS_PORT_ID = "com.clop-free.Clop.settingsService"
 
 // MARK: - Settings over the wire
 
@@ -749,7 +744,7 @@ struct OptimisationRequest: Codable, Identifiable {
     /// for where optimised and converted files are placed. nil = use the app settings.
     var placement: PlacementOverride? = nil
     /// `mcp` when the request arrived through the bundled MCP server. The app refuses these unless the
-    /// user has Pro and has allowed agent changes, and refuses a pipeline carrying a script step
+    /// user has allowed agent changes, and refuses a pipeline carrying a script step
     /// unless they have allowed those separately.
     ///
     /// An agent proved it could run `runScript(code: touch /tmp/...)` with every switch off, because
@@ -764,8 +759,7 @@ struct OptimisationRequest: Codable, Identifiable {
 }
 
 func runningClopApp() -> NSRunningApplication? {
-    NSRunningApplication.runningApplications(withBundleIdentifier: "com.lowtechguys.Clop-setapp").first
-        ?? NSRunningApplication.runningApplications(withBundleIdentifier: "com.lowtechguys.Clop").first
+    NSRunningApplication.runningApplications(withBundleIdentifier: "com.clop-free.Clop").first
 }
 
 func isClopRunning() -> Bool {
@@ -774,7 +768,7 @@ func isClopRunning() -> Bool {
 
 import os
 
-let LOG_SUBSYSTEM = Bundle.main.bundleIdentifier ?? "com.lowtechguys.Clop"
+let LOG_SUBSYSTEM = Bundle.main.bundleIdentifier ?? "com.clop-free.Clop"
 
 private let log = Logger(subsystem: LOG_SUBSYSTEM, category: "Shared")
 
@@ -1133,16 +1127,16 @@ let ARCH: String = {
     Darwin.sysctlbyname("hw.cputype", &ret, &size, nil, 0)
     return ret == NSBundleExecutableArchitectureARM64 ? "arm64" : "x86"
 }()
-let APP_SCRIPTS_DIR = FileManager.default.urls(for: .applicationScriptsDirectory, in: .userDomainMask).first ?? URL(fileURLWithPath: "\(NSHomeDirectory())/Library/Application Scripts/com.lowtechguys.Clop")
+let APP_SCRIPTS_DIR = FileManager.default.urls(for: .applicationScriptsDirectory, in: .userDomainMask).first ?? URL(fileURLWithPath: "\(NSHomeDirectory())/Library/Application Scripts/com.clop-free.Clop")
 
 /// exiftool tags that decide the colours an image shows, kept when stripping metadata. A camera JPEG in
 /// Adobe RGB often has no ICC profile and says so through the primaries in IFD0, which ImageIO reads;
 /// without them the colours come out as sRGB, less saturated.
 let COLOUR_TAGS = ["-ColorSpaceTags", "-icc_profile", "-WhitePoint", "-PrimaryChromaticities"]
 
-let GLOBAL_BIN_DIR_PARENT = APP_SCRIPTS_DIR // ~/Library/Application Scripts/com.lowtechguys.Clop
-let GLOBAL_BIN_DIR = GLOBAL_BIN_DIR_PARENT.appendingPathComponent("bin") // ~/Library/Application Scripts/com.lowtechguys.Clop/bin/
-let BIN_DIR = GLOBAL_BIN_DIR.appendingPathComponent(ARCH) // ~/Library/Application Scripts/com.lowtechguys.Clop/bin/arm64
+let GLOBAL_BIN_DIR_PARENT = APP_SCRIPTS_DIR // ~/Library/Application Scripts/com.clop-free.Clop
+let GLOBAL_BIN_DIR = GLOBAL_BIN_DIR_PARENT.appendingPathComponent("bin") // ~/Library/Application Scripts/com.clop-free.Clop/bin/
+let BIN_DIR = GLOBAL_BIN_DIR.appendingPathComponent(ARCH) // ~/Library/Application Scripts/com.clop-free.Clop/bin/arm64
 var EXIFTOOL = BIN_DIR.appendingPathComponent("exiftool").filePath!
 var HEIF_ENC = BIN_DIR.appendingPathComponent("heif-enc").filePath!
 var CWEBP = BIN_DIR.appendingPathComponent("cwebp").filePath!

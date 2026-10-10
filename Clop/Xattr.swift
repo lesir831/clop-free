@@ -9,7 +9,7 @@ enum Xattr {
         let localizedDescription = String(utf8String: strerror(errno))
     }
 
-    static let queue = DispatchQueue(label: "\(Bundle.main.bundleIdentifier ?? "com.lowtechguys.Clop").xattr", attributes: .concurrent)
+    static let queue = DispatchQueue(label: "\(Bundle.main.bundleIdentifier ?? "com.clop-free.Clop").xattr", attributes: .concurrent)
 
     static func withTimeout(_ timeout: TimeInterval, _ block: @escaping () -> Void) {
         let workItem = DispatchWorkItem(block: block)

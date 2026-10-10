@@ -22,17 +22,13 @@
 		C70A48EE2B1A06AD00C266DE /* Colorize.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70A48ED2B1A06AD00C266DE /* Colorize.swift */; };
 		C70B5F312AC029DA00345739 /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70B5F302AC029DA00345739 /* Shared.swift */; };
 		C73802052BD1B81A001BEE6C /* lrzip in Resources */ = {isa = PBXBuildFile; fileRef = C73802042BD1B81A001BEE6C /* lrzip */; };
-		C7605FC32F78194D0087B195 /* WarpDrop in Frameworks */ = {isa = PBXBuildFile; productRef = C7605FC22F78194D0087B195 /* WarpDrop */; };
 		C78211022A59E371008DB106 /* Lowtech in Frameworks */ = {isa = PBXBuildFile; productRef = C78211012A59E371008DB106 /* Lowtech */; };
-		C78211042A59E371008DB106 /* LowtechIndie in Frameworks */ = {isa = PBXBuildFile; productRef = C78211032A59E371008DB106 /* LowtechIndie */; };
-		C78211062A59E371008DB106 /* LowtechPro in Frameworks */ = {isa = PBXBuildFile; productRef = C78211052A59E371008DB106 /* LowtechPro */; };
 		C7956A422AC208DD00C0EDF2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7956A412AC208DD00C0EDF2 /* main.swift */; };
 		C7956A472AC2094500C0EDF2 /* Shared.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70B5F302AC029DA00345739 /* Shared.swift */; };
 		C7956A4A2AC209F200C0EDF2 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C7956A492AC209F200C0EDF2 /* ArgumentParser */; };
 		C7956A4C2AC317D200C0EDF2 /* ClopCLI in Copy Files */ = {isa = PBXBuildFile; fileRef = C7956A3F2AC208DD00C0EDF2 /* ClopCLI */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C7A1B0012FA3D00000JXLCDR /* JxlCoder in Frameworks */ = {isa = PBXBuildFile; productRef = C7A1B0002FA3D00000JXLCDR /* JxlCoder */; };
 		C7BE4CCF2D32EEA200B59E5C /* SymbolPicker in Frameworks */ = {isa = PBXBuildFile; productRef = C7BE4CCE2D32EEA200B59E5C /* SymbolPicker */; };
-		C7D697172F837AD000FAFD3A /* LowtechProSentry in Frameworks */ = {isa = PBXBuildFile; productRef = C7D697162F837AD000FAFD3A /* LowtechProSentry */; };
 		C7DF1A282AB8885600AF8EDC /* Ignore in Frameworks */ = {isa = PBXBuildFile; productRef = C7DF1A272AB8885600AF8EDC /* Ignore */; };
 		FCA166365F9B18F911E6A442 /* DeviceSizes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 886C0193E35A8257843695A7 /* DeviceSizes.swift */; };
 		FD05B6CFBCB14DDD17894DB1 /* VideoEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB802E8BADA731C142AB892 /* VideoEncoder.swift */; };
@@ -97,7 +93,6 @@
 		C7956A3F2AC208DD00C0EDF2 /* ClopCLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ClopCLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		C7956A412AC208DD00C0EDF2 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		C7956A4D2AC3553900C0EDF2 /* ClopCLI.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ClopCLI.entitlements; sourceTree = "<group>"; };
-		C7AB38D32AC8AA8900F299CE /* CoreBrightness.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBrightness.framework; path = ../../../../../System/Library/PrivateFrameworks/CoreBrightness.framework; sourceTree = "<group>"; };
 		C7AB6621288301590041BEC8 /* Clop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E943E2DE1FB4E78007C075A3 /* CropSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CropSize.swift; sourceTree = "<group>"; };
 		EDB4255A853AB53421EFF432 /* AudioFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFormat.swift; sourceTree = "<group>"; };
@@ -824,7 +819,6 @@
 				bin/x86/pngquant,
 				bin/x86/toGainMapHDR,
 				bin/x86/vipsthumbnail,
-				required.swift,
 			);
 			target = C7956A3E2AC208DD00C0EDF2 /* ClopCLI */;
 		};
@@ -858,11 +852,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C78211022A59E371008DB106 /* Lowtech in Frameworks */,
-				C78211042A59E371008DB106 /* LowtechIndie in Frameworks */,
-				C7D697172F837AD000FAFD3A /* LowtechProSentry in Frameworks */,
 				C7DF1A282AB8885600AF8EDC /* Ignore in Frameworks */,
-				C7605FC32F78194D0087B195 /* WarpDrop in Frameworks */,
-				C78211062A59E371008DB106 /* LowtechPro in Frameworks */,
 				C7BE4CCF2D32EEA200B59E5C /* SymbolPicker in Frameworks */,
 				C7A1B0012FA3D00000JXLCDR /* JxlCoder in Frameworks */,
 			);
@@ -887,7 +877,6 @@
 		C70B5F182AC014BF00345739 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C7AB38D32AC8AA8900F299CE /* CoreBrightness.framework */,
 				C70B5F192AC014BF00345739 /* Cocoa.framework */,
 			);
 			name = Frameworks;
@@ -976,12 +965,8 @@
 			name = Clop;
 			packageProductDependencies = (
 				C78211012A59E371008DB106 /* Lowtech */,
-				C78211032A59E371008DB106 /* LowtechIndie */,
-				C78211052A59E371008DB106 /* LowtechPro */,
 				C7DF1A272AB8885600AF8EDC /* Ignore */,
 				C7BE4CCE2D32EEA200B59E5C /* SymbolPicker */,
-				C7605FC22F78194D0087B195 /* WarpDrop */,
-				C7D697162F837AD000FAFD3A /* LowtechProSentry */,
 				C7A1B0002FA3D00000JXLCDR /* JxlCoder */,
 			);
 			productName = Clop;
@@ -1020,7 +1005,6 @@
 				C7DF1A262AB8885500AF8EDC /* XCRemoteSwiftPackageReference "swift-ignore" */,
 				C7956A482AC209F200C0EDF2 /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 				C73987702D32ECE200CCC939 /* XCRemoteSwiftPackageReference "SymbolPicker" */,
-				C7605FC12F78194D0087B195 /* XCLocalSwiftPackageReference "../../../Github/alin23/warpdrop/swift" */,
 				C7A1B0022FA3D00000JXLCDR /* XCRemoteSwiftPackageReference "jxl-coder-swift" */,
 			);
 			productRefGroup = C7AB6622288301590041BEC8 /* Products */;
@@ -1063,7 +1047,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Debug builds keep debug-level logs in the system log store, so `log show --debug` can look\n# back at something that happened before anyone started streaming. Release builds are untouched.\n[ \"$CONFIGURATION\" = \"Debug\" ] || exit 0\n\nplist=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nkey=\":OSLogPreferences:$PRODUCT_BUNDLE_IDENTIFIER:DEFAULT-OPTIONS:Level\"\n/usr/libexec/PlistBuddy -c \"Delete $key\" \"$plist\" 2>/dev/null\n/usr/libexec/PlistBuddy -c \"Add $key dict\" -c \"Add $key:Enable string Debug\" -c \"Add $key:Persist string Debug\" \"$plist\"\n";
+			shellScript = "# Persist debug-level logs only for local Debug builds. Do not expose private fields.\n[ \"$CONFIGURATION\" = \"Debug\" ] || exit 0\n\nplist=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nbase=\":OSLogPreferences:$PRODUCT_BUNDLE_IDENTIFIER:DEFAULT-OPTIONS\"\nfor key in \":OSLogPreferences\" \":OSLogPreferences:$PRODUCT_BUNDLE_IDENTIFIER\" \"$base\"; do\n    /usr/libexec/PlistBuddy -c \"Add $key dict\" \"$plist\" 2>/dev/null || true\ndone\n/usr/libexec/PlistBuddy -c \"Delete $base:Level\" \"$plist\" 2>/dev/null || true\n/usr/libexec/PlistBuddy -c \"Add $base:Level dict\" -c \"Add $base:Level:Enable string Debug\" -c \"Add $base:Level:Persist string Debug\" \"$plist\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1119,8 +1103,8 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = ClopCLI/ClopCLI.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1129,7 +1113,7 @@
 				INFOPLIST_FILE = ClopCLI/Info.plist;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.Clop.CLI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clop-free.Clop.CLI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1148,8 +1132,8 @@
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = ClopCLI/ClopCLI.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1158,7 +1142,7 @@
 				INFOPLIST_FILE = ClopCLI/Info.plist;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.Clop.CLI;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clop-free.Clop.CLI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -1206,7 +1190,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = RDDXV84A73;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1273,7 +1257,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = RDDXV84A73;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1302,8 +1286,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = Clop/Clop.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 3.5.0;
 				DEAD_CODE_STRIPPING = YES;
@@ -1315,7 +1299,7 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clop/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Clop;
+				INFOPLIST_KEY_CFBundleDisplayName = "Clop Free";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1330,7 +1314,7 @@
 				LLVM_LTO = YES_THIN;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 3.5.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.Clop;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clop-free.Clop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -1353,8 +1337,8 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = YES;
 				CODE_SIGN_ENTITLEMENTS = Clop/Clop.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 3.5.0;
 				DEAD_CODE_STRIPPING = YES;
@@ -1366,7 +1350,7 @@
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clop/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Clop;
+				INFOPLIST_KEY_CFBundleDisplayName = "Clop Free";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -1382,7 +1366,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 3.5.0;
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = com.lowtechguys.Clop;
+				PRODUCT_BUNDLE_IDENTIFIER = com.clop-free.Clop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
@@ -1431,13 +1415,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		C7605FC12F78194D0087B195 /* XCLocalSwiftPackageReference "../../../Github/alin23/warpdrop/swift" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../Github/alin23/warpdrop/swift;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
 		C73987702D32ECE200CCC939 /* XCRemoteSwiftPackageReference "SymbolPicker" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1451,8 +1428,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/FuzzyIdeas/Lowtech";
 			requirement = {
-				branch = ventura;
-				kind = branch;
+				kind = revision;
+				revision = 947d6a1c7073352cec64486b3c6ea0b2a17e62b4;
 			};
 		};
 		C7956A482AC209F200C0EDF2 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
@@ -1482,24 +1459,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		C7605FC22F78194D0087B195 /* WarpDrop */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = WarpDrop;
-		};
 		C78211012A59E371008DB106 /* Lowtech */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C78211002A59E371008DB106 /* XCRemoteSwiftPackageReference "Lowtech" */;
 			productName = Lowtech;
-		};
-		C78211032A59E371008DB106 /* LowtechIndie */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C78211002A59E371008DB106 /* XCRemoteSwiftPackageReference "Lowtech" */;
-			productName = LowtechIndie;
-		};
-		C78211052A59E371008DB106 /* LowtechPro */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C78211002A59E371008DB106 /* XCRemoteSwiftPackageReference "Lowtech" */;
-			productName = LowtechPro;
 		};
 		C7956A492AC209F200C0EDF2 /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1515,10 +1478,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = C73987702D32ECE200CCC939 /* XCRemoteSwiftPackageReference "SymbolPicker" */;
 			productName = SymbolPicker;
-		};
-		C7D697162F837AD000FAFD3A /* LowtechProSentry */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = LowtechProSentry;
 		};
 		C7DF1A272AB8885600AF8EDC /* Ignore */ = {
 			isa = XCSwiftPackageProductDependency;

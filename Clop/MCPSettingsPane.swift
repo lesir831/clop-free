@@ -1,7 +1,6 @@
 import AppKit
 import Defaults
 import Lowtech
-import LowtechPro
 import SwiftUI
 
 // MARK: - MCPSettingsView
@@ -15,14 +14,10 @@ struct MCPSettingsView: View {
     var body: some View {
         Form {
             Section(header: SectionHeader(title: "MCP")) {
-                if !proactive {
-                    proRow
-                }
                 Toggle(isOn: $mcpEnabled) {
                     Text("Enable MCP").regular(13)
                         + Text("\nAllow agents to control Clop, run file optimisations, change settings, write pipelines").round(11, weight: .regular).foregroundColor(.secondary)
                 }
-                .disabled(!proactive)
                 .onChange(of: mcpEnabled) { _ in MCPInstaller.writeServerCard() }
                 .searchAnchor("mcp.main.mcpEnabled", namesControl: true)
 
@@ -30,7 +25,7 @@ struct MCPSettingsView: View {
                     Text("Allow agents to write arbitrary scripts in pipelines").regular(13)
                         + Text("\nUsing scripts in pipelines allows for flexible operations but can be dangerous if not properly verified").round(11, weight: .regular).foregroundColor(.secondary)
                 }
-                .disabled(!proactive || !mcpEnabled)
+                .disabled(!mcpEnabled)
                 .onChange(of: mcpAllowScriptSteps) { on in
                     guard on else { return }
                     if !askAboutScripts() {
@@ -67,14 +62,6 @@ struct MCPSettingsView: View {
 
     @Default(.mcpEnabled) private var mcpEnabled
     @Default(.mcpAllowScriptSteps) private var mcpAllowScriptSteps
-
-    private var proRow: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("Needs Clop Pro").regular(13)
-            Spacer()
-            Button("Manage Licence") { manageLicenceInSettings() }
-        }
-    }
 
     private func clientRows(_ clients: [MCPInstaller.Client]) -> some View {
         VStack(alignment: .leading, spacing: 10) {

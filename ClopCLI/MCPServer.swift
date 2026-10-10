@@ -73,7 +73,7 @@ enum MCPServer {
 
     // MARK: Protocol constants
 
-    static let serverName = "clop-mcp"
+    static let serverName = "clop-free-mcp"
     static let serverVersion = "2.0.0"
 
     /// Only the fallback for a client that omits the field. The negotiated version is whatever the
@@ -85,8 +85,6 @@ enum MCPServer {
     /// breaking change, so elicitation splits on this version. The versions sort
     /// lexicographically, which is why a plain string compare is enough.
     static let mrtrFrom = "2026-07-28"
-
-    static let buyURL = "https://lowtechguys.com/clop"
 
     static var state = State()
     static var current = Call()
