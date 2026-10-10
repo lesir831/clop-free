@@ -41,15 +41,3 @@ jobs:
         run: make assets
       - name: Build universal app with ad-hoc signing
         run: make package
-      - name: Include matching application source
-        run: git archive --format=tar.gz --output=build/clop-free-source.tar.gz HEAD
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: clop-free-adhoc-${{ github.sha }}
-          path: |
-            build/clop-free.zip
-            build/clop-free.zip.sha256
-            build/clop-free-source.tar.gz
-            LICENSE
-          if-no-files-found: error
-          retention-days: 14

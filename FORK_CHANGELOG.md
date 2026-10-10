@@ -14,5 +14,7 @@ Base: upstream main `af3cdb95faf330f16508ab6cd0b334053478a827`.
 - Added independent build, ad-hoc/Developer ID signing and optional notarization tooling
 - Added verified Git LFS asset preparation and pinned asset recovery for standalone source ZIPs, source regression tests, isolated Swift policy tests and macOS build CI
 - Added upstream merge synchronization that opens draft pull requests only after validation and stops on conflicts
+- Applied the app's deployment target to Swift packages and added a revision/hash-guarded repair for the pinned IgnoreRust duplicate module map
+- Withheld CI artifact uploads and binary releases pending dependency redistribution-license review; build, signing and package checks remain enabled
 
 Native macOS compilation, notarization and runtime behavior must be checked on macOS; Linux source checks are not equivalent to those validations.

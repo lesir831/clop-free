@@ -63,7 +63,9 @@ class BuildInvocationTests(unittest.TestCase):
                 "xcodebuild": (
                     "#!/bin/bash\n"
                     "if [[ $1 == -version ]]; then printf 'Xcode 26.3\\n'; exit 0; fi\n"
-                    "printf '%s\\n' \"$@\" > \"$XCODE_TEST_LOG\"\nexit 73\n"
+                    "printf '%s\\n' \"$@\" >> \"$XCODE_TEST_LOG\"\n"
+                    "for arg in \"$@\"; do if [[ $arg == -resolvePackageDependencies ]]; then exit 0; fi; done\n"
+                    "exit 73\n"
                 ),
             }
             for name, source in commands.items():
@@ -82,8 +84,9 @@ class BuildInvocationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 73, result.stdout + result.stderr)
             args = log.read_text().splitlines()
             self.assertIn("MACOSX_DEPLOYMENT_TARGET=13.0", args)
-            self.assertIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", args)
-            self.assertIn("-onlyUsePackageVersionsFromResolvedFile", args)
+            self.assertNotIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", args)
+            self.assertEqual(args.count("-onlyUsePackageVersionsFromResolvedFile"), 2)
+            self.assertLess(args.index("-resolvePackageDependencies"), args.index("build"))
             self.assertIn("CODE_SIGNING_ALLOWED=NO", args)
 
 
@@ -317,6 +320,12 @@ class SyncTests(unittest.TestCase):
 
 
 class WorkflowTests(unittest.TestCase):
+    def test_ci_withholds_binary_upload_pending_license_review(self):
+        text = (ROOT / ".github/workflows/build.yml").read_text()
+        self.assertIn("run: make package", text)
+        self.assertNotIn("actions/upload-artifact", text)
+        self.assertNotIn("git archive", text)
+
     def test_no_mutating_pr_target_workflow_or_secrets(self):
         for path in (ROOT / ".github/workflows").glob("*.yml"):
             text = path.read_text()

@@ -49,10 +49,13 @@ ad-hoc app may be blocked by Gatekeeper; ad-hoc signing is not notarization.
 The build command applies the application's macOS 13.0 deployment target to all
 targets, including Swift packages. This prevents a transitive package's older
 default deployment target from conflicting with a dependency's minimum version.
-It also opts out of Swift explicit module builds using
-`SWIFT_ENABLE_EXPLICIT_MODULES=NO`: the pinned IgnoreRust XCFramework contains
-duplicate module maps that conflict in Xcode 26's eager dependency scanner.
-The compatibility setting leaves the pinned dependency files unchanged.
+Before compilation it resolves the locked packages and runs a guarded repair for
+the pinned IgnoreRust XCFramework's duplicate module maps. The repair checks the
+package revision and exact module-map contents, then removes only the redundant
+nested map from the build checkout and any matching copied build product. The
+outer map, headers and compiled library remain unchanged. A changed pin or
+unexpected file fails closed for manual review; repeated builds are supported.
+Swift explicit module builds remain enabled.
 
 Optional environment variables:
 
@@ -187,9 +190,11 @@ The macOS policy harness tests more than five operations and preserves tool
 readiness, error propagation, MCP opt-in and script consent.
 
 The build workflow runs portable checks, the policy harness, asset verification,
-and a universal ad-hoc build. Successful runs retain the app ZIP, hash, GPL license
-and matching application source snapshot as short-lived artifacts. They do not
-publish a release or use Developer ID/notarization credentials. Source snapshots
+and a universal ad-hoc build with packaging and signature validation. Run logs
+remain available, but artifact uploads and release publication are withheld
+pending dependency redistribution-license review. Even a plain source archive
+includes the inherited `lrzip` executable, so CI does not upload source archives
+either. Builds use no Developer ID/notarization credentials. Source snapshots
 alone do not satisfy every dependency's corresponding-source obligations; see
 [NOTICE.md](../NOTICE.md) before distributing binaries.
 

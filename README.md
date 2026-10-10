@@ -52,6 +52,7 @@ MCP keeps upstream's permission model. It is not a sandbox: saved user-authored 
 - Optimiser tools are supplied by upstream in a Git LFS archive. `make assets` retrieves and verifies the pinned bytes. The tools are not independently rebuilt from source here
 - The public Lowtech utility package remains a pinned dependency. Its manifest can resolve unused payment-related packages even though this app does not link the payment or telemetry products. This repository does not vendor or relicense that package
 - Source checks do not prove that the complete macOS application builds or works. A successful macOS CI build and runtime smoke test are required before treating a binary as verified
+- Downloadable app binaries and CI artifact uploads are withheld pending redistribution-license review of Lowtech, swift-ignore and bundled tools. CI build logs and local build instructions remain available
 
 ## Upstream and licensing
 
