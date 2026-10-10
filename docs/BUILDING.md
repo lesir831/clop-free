@@ -46,6 +46,10 @@ the app, register an account, upload a build, or change Gatekeeper. To test loca
 open the output app yourself and grant only the permissions you need. A downloaded
 ad-hoc app may be blocked by Gatekeeper; ad-hoc signing is not notarization.
 
+The build command applies the application's macOS 13.0 deployment target to all
+targets, including Swift packages. This prevents a transitive package's older
+default deployment target from conflicting with a dependency's minimum version.
+
 Optional environment variables:
 
 ```sh

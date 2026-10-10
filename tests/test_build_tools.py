@@ -49,6 +49,43 @@ class AssetTests(unittest.TestCase):
                     assets.verify_archive(root / "archive", root / "hash")
 
 
+class BuildInvocationTests(unittest.TestCase):
+    def test_build_propagates_deployment_target_to_packages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "Scripts").mkdir()
+            shutil.copyfile(ROOT / "Scripts/build.sh", root / "Scripts/build.sh")
+            fake_bin = root / "fake-bin"
+            fake_bin.mkdir()
+            commands = {
+                "uname": "#!/bin/bash\nprintf 'Darwin\\n'\n",
+                "python3": "#!/bin/bash\nexit 0\n",
+                "xcodebuild": (
+                    "#!/bin/bash\n"
+                    "if [[ $1 == -version ]]; then printf 'Xcode 26.3\\n'; exit 0; fi\n"
+                    "printf '%s\\n' \"$@\" > \"$XCODE_TEST_LOG\"\nexit 73\n"
+                ),
+            }
+            for name, source in commands.items():
+                command = fake_bin / name
+                command.write_text(source)
+                command.chmod(0o755)
+            log = root / "xcode-arguments.txt"
+            env = os.environ.copy()
+            env.update(PATH=str(fake_bin) + os.pathsep + env["PATH"],
+                       XCODE_TEST_LOG=str(log), BUILD_DIR=str(root / "build"))
+            env.pop("NOTARY_PROFILE", None)
+            env.pop("SIGN_IDENTITY", None)
+            env.pop("CONFIGURATION", None)
+            result = subprocess.run(["bash", "Scripts/build.sh"], cwd=root, env=env,
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 73, result.stdout + result.stderr)
+            args = log.read_text().splitlines()
+            self.assertIn("MACOSX_DEPLOYMENT_TARGET=13.0", args)
+            self.assertIn("-onlyUsePackageVersionsFromResolvedFile", args)
+            self.assertIn("CODE_SIGNING_ALLOWED=NO", args)
+
+
 class SigningTests(unittest.TestCase):
     def test_process_entitlements_only_for_executables(self):
         with tempfile.TemporaryDirectory() as directory:

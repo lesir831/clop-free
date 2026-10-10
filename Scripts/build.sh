@@ -30,7 +30,7 @@ xcodebuild -project Clop.xcodeproj -scheme Clop \
     -configuration "$CONFIGURATION" -destination 'generic/platform=macOS' \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
     -disableAutomaticPackageResolution -onlyUsePackageVersionsFromResolvedFile \
-    build "ARCHS=${ARCHS:-arm64 x86_64}" ONLY_ACTIVE_ARCH=NO \
+    build "ARCHS=${ARCHS:-arm64 x86_64}" ONLY_ACTIVE_ARCH=NO MACOSX_DEPLOYMENT_TARGET=13.0 \
     CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= DEVELOPMENT_TEAM=
 
 STAGE="$(mktemp -d "$BUILD_DIR/stage.XXXXXX")"
