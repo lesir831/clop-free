@@ -738,6 +738,7 @@ class AppDelegate: AppDelegateParent {
 
     /// Plain Space pressed while hovering a floating result: toggle QuickLook.
     /// Returns false to forward the keypress to the focused app instead.
+    @MainActor
     func handleBareHotkey(_ key: SauceKey) -> Bool {
         guard key == .space, finishedOnboarding, !SM.selecting,
               let opt = OM.hovered, !opt.editingFilename

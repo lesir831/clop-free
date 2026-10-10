@@ -35,6 +35,8 @@ jobs:
           persist-credentials: false
       - name: Show toolchain
         run: xcodebuild -version && swift --version && python3 --version
+      - name: Run regression checks on macOS
+        run: make check
       - name: Exercise actual feature-policy functions
         run: python3 Scripts/test_feature_policy.py
       - name: Fetch pinned optimizer assets

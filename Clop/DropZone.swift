@@ -760,6 +760,8 @@ func optimiseDroppedItems(_ itemProviders: [NSItemProvider], copy: Bool, preset:
     }
 
     let itemsToOptimise = DM.itemsToOptimise
+    // A failed provider can reuse the captured drag item only for a single-item drop.
+    let itemProvidersCount = itemProviders.count
     let copyToClipboard = Defaults[.autoCopyToClipboard]
 
     // Batch mode: a large pile of dropped files goes to the lightweight engine + window instead of one

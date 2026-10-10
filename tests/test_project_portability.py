@@ -115,6 +115,11 @@ class ProjectPortabilityTests(unittest.TestCase):
                 self.assertEqual(settings['DEVELOPMENT_TEAM'], '')
         self.assertNotIn('/Users/', PROJECT.read_text())
 
+    def test_ui_hotkey_handlers_are_main_actor_isolated(self):
+        source = (ROOT / 'Clop/ClopApp.swift').read_text()
+        for name in ('handleBareHotkey', 'handleCommandHotkey', 'handleHotkey'):
+            self.assertRegex(source, rf'@MainActor\s+func {name}\(')
+
     def test_plists_and_entitlements_are_valid(self):
         for folder in ('Clop', 'ClopCLI'):
             for glob in ('*.plist', '*.entitlements'):
