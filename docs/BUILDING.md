@@ -49,6 +49,10 @@ ad-hoc app may be blocked by Gatekeeper; ad-hoc signing is not notarization.
 The build command applies the application's macOS 13.0 deployment target to all
 targets, including Swift packages. This prevents a transitive package's older
 default deployment target from conflicting with a dependency's minimum version.
+It also opts out of Swift explicit module builds using
+`SWIFT_ENABLE_EXPLICIT_MODULES=NO`: the pinned IgnoreRust XCFramework contains
+duplicate module maps that conflict in Xcode 26's eager dependency scanner.
+The compatibility setting leaves the pinned dependency files unchanged.
 
 Optional environment variables:
 

@@ -26,11 +26,14 @@ python3 Scripts/verify_assets.py
 
 # Signing is explicit after the complete bundle is assembled. No Apple account,
 # provisioning profile, signing team or automatic credential lookup is needed.
+# The pinned IgnoreRust XCFramework has duplicate module maps; use Xcode's
+# supported implicit-module compatibility mode rather than rewriting its bytes.
 xcodebuild -project Clop.xcodeproj -scheme Clop \
     -configuration "$CONFIGURATION" -destination 'generic/platform=macOS' \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
     -disableAutomaticPackageResolution -onlyUsePackageVersionsFromResolvedFile \
     build "ARCHS=${ARCHS:-arm64 x86_64}" ONLY_ACTIVE_ARCH=NO MACOSX_DEPLOYMENT_TARGET=13.0 \
+    SWIFT_ENABLE_EXPLICIT_MODULES=NO \
     CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= DEVELOPMENT_TEAM=
 
 STAGE="$(mktemp -d "$BUILD_DIR/stage.XXXXXX")"

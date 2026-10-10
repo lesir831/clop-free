@@ -82,6 +82,7 @@ class BuildInvocationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 73, result.stdout + result.stderr)
             args = log.read_text().splitlines()
             self.assertIn("MACOSX_DEPLOYMENT_TARGET=13.0", args)
+            self.assertIn("SWIFT_ENABLE_EXPLICIT_MODULES=NO", args)
             self.assertIn("-onlyUsePackageVersionsFromResolvedFile", args)
             self.assertIn("CODE_SIGNING_ALLOWED=NO", args)
 
