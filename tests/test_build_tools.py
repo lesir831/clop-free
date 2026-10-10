@@ -185,12 +185,34 @@ class ArchiveTests(unittest.TestCase):
             self.assertEqual((root / "out/arm64/alias").read_bytes(), b"data")
             self.assertEqual((root / "out/arm64/helper").stat().st_mode & 0o4000, 0)
 
+    def test_safe_sibling_directory_links(self):
+        entries = [("arm64/lib", "../lib"), ("x86/lib", "../lib"),
+                   ("arch/nested/lib", "../../lib"), ("lib/helper", None)]
+        for ordered_entries in (entries, list(reversed(entries))):
+            with self.subTest(entries=ordered_entries), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                archive = self.make_archive(root, ordered_entries)
+                destination = root / "out"
+                signer.extract_safe(archive, destination)
+                for name, target in entries[:-1]:
+                    link = destination / name
+                    self.assertTrue(link.is_symlink())
+                    self.assertEqual(os.readlink(link), target)
+                    self.assertEqual(link.resolve(), destination / "lib")
+                    self.assertEqual((link / "helper").read_bytes(), b"data")
+
     def test_path_and_link_traversal_rejected_before_extraction(self):
         attacks = [
             [("../escape", None)], [("/absolute", None)],
             [("link", "../escape")], [("link", "safe"), ("link/file", None)],
             [("duplicate", None), ("duplicate", None)],
             [("link", "inside/../sibling")],
+            [("arm64/lib", "../../escape")], [("arm64/lib", "../..")],
+            [("arm64/lib", "/absolute")],
+            [("arm64/lib", "../inside/../sibling")],
+            [("arm64/lib", "../alias/../escape"), ("alias", ".")],
+            [("arm64", "safe"), ("arm64/lib", "../lib")],
+            [("arm64/lib", "../lib"), ("arm64/lib/helper", None)],
         ]
         for entries in attacks:
             with self.subTest(entries=entries), tempfile.TemporaryDirectory() as directory:

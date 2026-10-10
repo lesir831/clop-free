@@ -41,5 +41,7 @@ jobs:
         run: python3 Scripts/test_feature_policy.py
       - name: Fetch pinned optimizer assets
         run: make assets
+      - name: Validate optimizer archive paths before compilation
+        run: python3 Scripts/check_optimizer_archive.py
       - name: Build universal app with ad-hoc signing
         run: make package

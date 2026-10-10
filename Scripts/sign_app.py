@@ -116,9 +116,17 @@ def extract_safe(archive: Path, destination: Path):
             if member.issym() or member.islnk():
                 base = str(path.parent) if member.issym() else "."
                 target = posixpath.normpath(posixpath.join(base, member.linkname))
+                target_parts = PurePosixPath(member.linkname).parts
+                if member.issym():
+                    # Leading parents start from the link's physical directory:
+                    # member parents are forbidden from traversing links below.
+                    # A parent after a named component could follow another link,
+                    # so lexical normalization alone cannot prove it stays inside.
+                    while target_parts and target_parts[0] == "..":
+                        target_parts = target_parts[1:]
                 if (target.startswith("/") or target == ".." or target.startswith("../")
-                        or ".." in PurePosixPath(member.linkname).parts):
-                    raise ValueError(f"Unsafe archive link: {member.name}")
+                        or ".." in target_parts):
+                    raise ValueError(f"Unsafe archive link: {member.name!r} -> {member.linkname!r} (normalized: {target!r})")
                 links.add(normalized)
         for member in members:
             path = PurePosixPath(member.name)
